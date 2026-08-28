@@ -5,6 +5,7 @@ import {
 import { DEFAULT_CONFIG } from "./lib/defaultConfig";
 import { useHistory, loadStored } from "./lib/state";
 import { applyBundle, makeTile, type Bundle } from "./lib/bundles";
+import { PRESETS, applyPreset, type Preset } from "./lib/themes";
 import { PartsList } from "./components/PartsList";
 import { DetailCallout } from "./components/DetailCallout";
 import { Specimen } from "./components/Specimen";
@@ -100,6 +101,26 @@ export default function App() {
     setPx(Math.round(MIN_PX + ratio * (MAX_PX - MIN_PX)));
   };
   const gripPct = ((px - MIN_PX) / (MAX_PX - MIN_PX)) * 100;
+
+  const onPreset = useCallback((p: Preset) => {
+    setConfig((c) => applyPreset(c, p));
+    say(`Applied the ${p.name} theme.`);
+  }, [setConfig]);
+
+  const importB64 = async () => {
+    const raw = window.prompt("Paste a statusline config (base64, or raw JSON):");
+    if (!raw) return;
+    const text = raw.trim().replace(/^statusline import\s+/, "");
+    let parsed: unknown;
+    try {
+      parsed = JSON.parse(text.startsWith("{") ? text : decodeURIComponent(escape(atob(text))));
+    } catch { say("That did not decode as base64 or JSON."); return; }
+    try {
+      setConfig(parseConfig(parsed));
+      setSelected(null);
+      say("Config imported.");
+    } catch { say("That decoded, but it is not a valid config."); }
+  };
 
   const copyJson = async () => {
     try { await navigator.clipboard.writeText(JSON.stringify(config, null, 2)); say("Config copied as JSON."); }
@@ -212,10 +233,22 @@ export default function App() {
         </div>
         <div className="tb-cell"><span className="k">Parts</span><span className="v">{flat.length} drawn</span></div>
         <div className="tb-cell"><span className="k">Data</span><span className="v">synthetic</span></div>
+        <div className="tb-cell tb-themes">
+          <span className="k">Theme</span>
+          <span className="v theme-row">
+            {PRESETS.map((p) => (
+              <button key={p.id} className="theme-chip" onClick={() => onPreset(p)} title={p.note}>
+                <span className="chip-swatch" style={{ background: p.terminalBg }} />
+                {p.name}
+              </button>
+            ))}
+          </span>
+        </div>
         <div className="tb-spacer" aria-hidden="true" />
         <div className="tb-cell tb-actions">
           <button className="btn" onClick={undo} disabled={!canUndo} aria-label="Undo"><IconUndo size={13} /></button>
           <button className="btn" onClick={redo} disabled={!canRedo} aria-label="Redo"><IconRedo size={13} /></button>
+          <button className="btn" onClick={importB64}><IconCopy size={13} /> Import</button>
           <button className="btn" onClick={download}><IconDownload size={13} /> JSON</button>
           <button className="btn" onClick={copyJson}><IconCopy size={13} /> Raw</button>
           <button className="btn btn-pen" onClick={copyInstall}>Copy install</button>

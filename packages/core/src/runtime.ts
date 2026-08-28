@@ -58,9 +58,48 @@ export interface LocalData {
   home?: string;
 }
 
+/** Git facts, resolved by the host (subprocess or cache) and handed in. */
+export interface GitInfo {
+  branch?: string; ahead?: number; behind?: number;
+  staged?: number; modified?: number; untracked?: number; conflict?: number;
+  stash?: number; sha?: string; last?: string; web?: string;
+  diffAdded?: number; diffRemoved?: number;
+}
+export interface GhInfo {
+  available?: boolean; open?: number; mine?: number; review?: number;
+  issues?: number; notifications?: number;
+}
+export interface CiInfo { available?: boolean; status?: string | null; conclusion?: string | null }
+
+/** Personal data files, read by the host so core stays free of the filesystem. */
+export interface PersonalInfo {
+  verses?: { src: string; theme?: string; en?: string; sa?: string }[];
+  tracks?: { title: string; artist?: string; url?: string }[];
+  skills?: string[];
+}
+
+export interface SystemInfo {
+  hostname?: string;
+  battery?: { percent: number; charging: boolean };
+  venv?: string;
+  nodeVersion?: string;
+  pythonVersion?: string;
+}
+
+/** Now-playing, from playerctl or AppleScript. */
+export interface MediaInfo { title?: string; artist?: string; playing?: boolean }
+
 export interface RuntimeData {
   cc: ClaudeStdin;
   local: LocalData;
   /** Terminal width in columns, from $COLUMNS. 0 means unknown -> no dropping. */
   columns: number;
+  git?: GitInfo;
+  gh?: GhInfo;
+  ci?: CiInfo;
+  personal?: PersonalInfo;
+  system?: SystemInfo;
+  media?: MediaInfo;
+  /** Output of user-configured custom commands, keyed by tile id. */
+  custom?: Record<string, string>;
 }

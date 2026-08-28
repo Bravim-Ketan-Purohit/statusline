@@ -2,7 +2,17 @@
   "name": "@statusline/cli",
   "version": "0.1.0",
   "type": "module",
-  "bin": { "statusline": "./dist/index.js" },
-  "scripts": { "build": "tsc -p tsconfig.json" },
-  "dependencies": { "@statusline/core": "workspace:*" }
+  "bin": {
+    "statusline": "./dist/statusline.js"
+  },
+  "scripts": {
+    "build": "tsc -p tsconfig.json && node build.mjs",
+    "test": "node --test test/*.test.mjs"
+  },
+  "dependencies": {
+    "@statusline/core": "workspace:*"
+  },
+  "devDependencies": {
+    "esbuild": "^0.21.5"
+  }
 }

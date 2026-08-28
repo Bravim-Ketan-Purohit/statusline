@@ -688,3 +688,31 @@ input[type="checkbox"]:checked::after {
   border-radius: 50%;
   background: var(--sheet);
 }
+
+/* ===== theme presets in the title block ================================= */
+
+.tb-themes { flex: 0 1 auto; min-width: 0; }
+.theme-row { display: flex; gap: 4px; align-items: center; flex-wrap: wrap; }
+.theme-chip {
+  appearance: none;
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  background: transparent;
+  border: var(--w-hair) solid var(--rule);
+  padding: 2px 7px 2px 3px;
+  font-family: var(--font-label);
+  font-size: 10px;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: var(--ink-2);
+  cursor: pointer;
+  transition: border-color 140ms var(--ease), color 140ms var(--ease);
+}
+.theme-chip:hover { border-color: var(--pen); color: var(--ink); }
+.chip-swatch {
+  width: 12px; height: 12px;
+  border: var(--w-hair) solid var(--ink);
+  flex: none;
+}
+@media (max-width: 1080px) { .tb-themes { flex: 1 0 100%; } }

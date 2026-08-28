@@ -7,5 +7,7 @@ export * from "./render.js";
 export * from "./tiles/registry.js";
 export { osc8, rgbTo256, rgbTo16, hexToRgb, resolveColor } from "./adapters/ansi.js";
 export * from "./adapters/web.js";
+export * from "./adapters/tmux.js";
 export { humanDelta, projectCap } from "./tiles/fiveHourBar.js";
 export { renderBar, barColor } from "./tiles/contextBar.js";
+export { fmtTokens, seeded } from "./tiles/util.js";

@@ -24,6 +24,9 @@ export function projectCap(
 ): { resetsIn: string; capEta: string | null } | null {
   const remaining = resetsAt - nowSec;
   if (remaining <= 0) return null;
+  // A reset further out than the window itself is not a 5h window; treat a
+  // bogus or mis-scaled timestamp as absent rather than printing 2281124h.
+  if (remaining > WINDOW_SECONDS) return null;
   const elapsed = WINDOW_SECONDS - remaining;
   const resetsIn = humanDelta(remaining);
   if (elapsed < opts.minElapsed || usedPct < opts.minPct) return { resetsIn, capEta: null };

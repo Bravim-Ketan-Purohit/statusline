@@ -14,3 +14,6 @@ jobs:
       # Unit tests, then the perf gate. bench.ts exits non-zero on regression,
       # which is what makes "fail the build if it regresses" real.
       - run: pnpm test
+      # tiles/ commands smoke: the bundle must actually execute
+      - run: echo '{}' | COLUMNS=120 node packages/cli/dist/statusline.js render
+      - run: node packages/cli/dist/statusline.js tiles

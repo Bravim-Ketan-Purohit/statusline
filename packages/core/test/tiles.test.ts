@@ -7,10 +7,15 @@ import type { RuntimeData } from "../src/runtime.js";
 const empty: RuntimeData = { cc: {}, local: { now: new Date() }, columns: 200 };
 
 /**
- * Clock is Tier 1 and reads no stdin field, so it legitimately always renders.
- * Every OTHER tile must vanish rather than draw an empty box.
+ * Some tiles legitimately always render because they read no stdin field:
+ * the clock reads the system time, the layout primitives are literal spacing,
+ * and the media controls are buttons rather than readouts. Every OTHER tile
+ * must vanish rather than draw an empty box.
  */
-const DATA_INDEPENDENT = new Set(["clock"]);
+const DATA_INDEPENDENT = new Set([
+  "clock", "hostname", "spacer", "separator",
+  "media-play", "media-next", "media-prev", "media-vol-up", "media-vol-down",
+]);
 
 test("data-dependent tiles render nothing on empty data (no empty boxes)", () => {
   for (const [id, mod] of registry) {

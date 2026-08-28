@@ -10,7 +10,7 @@ import { dirname, join } from "node:path";
 const BUDGET_MS = 100;
 const RUNS = 12;
 const here = dirname(fileURLToPath(import.meta.url));
-const cli = join(here, "index.js");
+const cli = join(here, "statusline.js");   // the shipped bundle, not the raw entry
 
 const payload = JSON.stringify({
   session_id: "bench",
