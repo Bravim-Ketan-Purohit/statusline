@@ -1,7 +1,10 @@
 import { span } from "../spans.js";
 import type { TileModule } from "./types.js";
-import { homedir } from "node:os";
 
+/**
+ * `home` arrives on RuntimeData rather than being read from node:os, so core
+ * stays platform-neutral and the same module runs in the browser preview.
+ */
 export const cwdTile: TileModule<{ segments: number }> = {
   id: "cwd",
   displayName: "Working directory",
@@ -9,12 +12,12 @@ export const cwdTile: TileModule<{ segments: number }> = {
   tier: 0,
   capabilities: [],
   defaultProps: { segments: 2 },
-  render(props, { cc }, mode) {
+  render(props, { cc, local }, mode) {
     const raw = cc.workspace?.current_dir ?? cc.cwd;
     if (!raw) return [];
     let disp = raw;
-    const home = homedir();
-    if (disp.startsWith(home)) disp = "~" + disp.slice(home.length);
+    const home = local.home;
+    if (home && disp.startsWith(home)) disp = "~" + disp.slice(home.length);
     const parts = disp.split("/").filter(Boolean);
     const keep = mode === "compact" ? 1 : Math.max(1, props.segments);
     if (parts.length > keep) disp = parts.slice(-keep).join("/");

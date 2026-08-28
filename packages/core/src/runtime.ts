@@ -54,6 +54,8 @@ export interface LocalData {
   gitBranch?: string;
   gitRoot?: string;
   now?: Date;
+  /** home directory for ~-shortening; supplied by the host, never read from node:os */
+  home?: string;
 }
 
 export interface RuntimeData {

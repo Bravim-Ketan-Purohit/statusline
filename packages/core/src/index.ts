@@ -5,6 +5,7 @@ export * from "./width.js";
 export * from "./layout.js";
 export * from "./render.js";
 export * from "./tiles/registry.js";
-export { osc8, rgbTo256, rgbTo16, hexToRgb } from "./adapters/ansi.js";
+export { osc8, rgbTo256, rgbTo16, hexToRgb, resolveColor } from "./adapters/ansi.js";
+export * from "./adapters/web.js";
 export { humanDelta, projectCap } from "./tiles/fiveHourBar.js";
 export { renderBar, barColor } from "./tiles/contextBar.js";

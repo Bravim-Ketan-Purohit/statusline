@@ -1,0 +1,130 @@
+{
+  "title": "Choose the visual world — statusline builder",
+  "question": "Operate surface, no incumbent identity. The roll assigned The Drawing Sheet, already raised by three hands it beat. Keep it, take an alternate, or re-roll.",
+  "options": [
+    {
+      "id": "assigned",
+      "label": "The Drawing Sheet",
+      "kicker": "THE ROLL",
+      "lineage": "dimensioned engineering drawings and PCB silkscreen legend",
+      "thesis": "The builder is a working mechanical drawing of the bar, and the thing being dimensioned is width in columns.",
+      "palette": ["#e8e2d4", "#2b2b28", "#7d3f8c", "#c2452d", "#2f7d8c"],
+      "materials": ["diazo whiteprint", "vellum", "CAD layer pens", "silkscreen legend"],
+      "viewport": "A warm vellum sheet: parts list left, the bar drawn at true size under a live dimension line, detail callout right, title block bottom-right.",
+      "risk": "Drafting chrome slides into skeuomorphic pastiche the moment it reaches for paper texture instead of line weight.",
+      "raised": [
+        { "from": "challenger-seven-segment", "raise": "Ghost cells: a dropped tile stays visible as an unlit witness mark, so absence is drawn as deliberately as presence." },
+        { "from": "challenger-cape", "raise": "Named silhouettes: the six breakpoints are a fixed visible set of states, never an anonymous slider position." },
+        { "from": "challenger-cloud-quarry", "raise": "Cut faces: the inspector exposes the tile's measured internals — spans and computed width — instead of only a settings form." },
+        { "from": "challenger-vertical-feed", "raise": "One snap away: every breakpoint stays pre-rendered so scrubbing the width reads as one continuous object." }
+      ]
+    },
+    {
+      "id": "model-pick",
+      "label": "The Specimen Sheet",
+      "kicker": "IMPECCABLE'S PICK",
+      "lineage": "letterpress type specimen books and galley proofs",
+      "thesis": "The bar shown the way a foundry shows a face: one design, set at every measure, down the sheet.",
+      "palette": ["#f2ede3", "#1a1815", "#8c2f39", "#4a4640"],
+      "materials": ["rag paper", "letterpress impression", "printer's rule"],
+      "viewport": "One tall sheet, the same status line set at 28, 40, 80, 120, 160 and 220 columns, each measure labelled in the margin.",
+      "risk": "Where a careful designer lands by default for anything about measure and type — and it reads as a font tool, not a terminal tool."
+    },
+    {
+      "id": "challenger-seven-segment",
+      "label": "Seven-Segment Family",
+      "verdict": "competitive",
+      "lineage": "bedside clocks, price totems, scoreboards",
+      "thesis": "A rigid cell mask where place never moves and only which cells light ever changes.",
+      "palette": ["#0d0d0d", "#e02020", "#2b2b2b", "#f0a020"],
+      "materials": ["LED segments", "matte ground", "ghost cells"],
+      "viewport": "The bar as a fixed mask of cells, unlit ghosts holding the places tiles would occupy.",
+      "case": "Wins audience identification outright — everyone knows the flashing 12:00. Loses product clarity: the mask has no vocabulary for measurement, breakpoints, or priority order.",
+      "risk": "Reads as retro novelty the moment the grid stops being strict.",
+      "hero": "https://impeccable.style/worlds/cards/signals-instruments-seven-segment-alarm-clock-hero.webp",
+      "board": "https://impeccable.style/worlds/cards/signals-instruments-seven-segment-alarm-clock.webp"
+    },
+    {
+      "id": "challenger-cracktro",
+      "label": "Cracktro Queue",
+      "verdict": "competitive",
+      "lineage": "demoscene crack intro title screens",
+      "thesis": "Rank is depth: brightness, letterspacing and drift rate encode priority without printing a number.",
+      "palette": ["#000000", "#f2ede2", "#8a8a82", "#e0a020"],
+      "materials": ["bitmap face", "emissive void", "parallax dust"],
+      "viewport": "Tile rows riding baselines over black, the front plane still and bright, lower priorities receding into drift.",
+      "case": "Native culture for exactly this audience, and depth-as-priority is a real mapping. Loses clarity: 'nothing is ever enclosed' fights an editor whose subject is literally boxes.",
+      "risk": "A tile editor that forbids enclosure cannot draw the pill it is designing.",
+      "hero": "https://impeccable.style/worlds/cards/operate-c-cracktro-scroller-queue-hero.webp",
+      "board": "https://impeccable.style/worlds/cards/operate-c-cracktro-scroller-queue.webp"
+    },
+    {
+      "id": "challenger-jcard",
+      "label": "Mixtape J-Card",
+      "verdict": "competitive",
+      "lineage": "hand-ruled cassette inlays",
+      "thesis": "Two hard sides, each with a running total that must not overflow the tape.",
+      "palette": ["#fbfaf5", "#1f3a8a", "#8a8a8a", "#c8102e"],
+      "materials": ["ballpoint on inlay stock", "printed rules", "brand stripe"],
+      "viewport": "The config as one folded inlay, rows as sides, column counts right-aligned tight against the margin.",
+      "case": "Strongest product clarity of the hand — 'the sides must not overflow the tape' is precisely the row-versus-columns constraint. Loses audience identification: it is nostalgia, not the notation this audience works in.",
+      "risk": "Handwriting cannot carry a monospace preview, so the one thing being designed sits outside the world.",
+      "hero": "https://impeccable.style/worlds/cards/vernacular-ephemera-cassette-j-card-hero.webp",
+      "board": "https://impeccable.style/worlds/cards/vernacular-ephemera-cassette-j-card.webp"
+    },
+    {
+      "id": "challenger-cape",
+      "label": "Drawcord Cape",
+      "verdict": "declined",
+      "lineage": "transforming drawcord garment",
+      "thesis": "One pull turns a flat plane into structured volume.",
+      "palette": ["#0b0b0b", "#c9a227", "#3a3a3a", "#6b7280"],
+      "materials": ["matte silk", "gold drawcord", "channel stitching"],
+      "viewport": "A flat plane gathering into ribs as a single cord is drawn.",
+      "case": "Fuses poorly: cloth has no columns, and developers do not read couture as their working notation.",
+      "kept": "Named transformation states rather than an anonymous slider.",
+      "risk": "A metaphor with no unit of measure.",
+      "hero": "https://impeccable.style/worlds/cards/textiles-weave-drape-fashion-drawcord-transforming-cape-hero.webp"
+    },
+    {
+      "id": "challenger-cloud-quarry",
+      "label": "Cloud Quarry",
+      "verdict": "declined",
+      "lineage": "surreal weather quarry",
+      "thesis": "Cut blocks of weather and assemble buildings that rain from their own walls.",
+      "palette": ["#f4f7fb", "#3f6fa8", "#6b7280", "#c0c8d0"],
+      "materials": ["cumulus mass", "cut faces", "silver saw line"],
+      "viewport": "Sectioned cloud blocks stacked with sky-blue voids between them.",
+      "case": "Fuses poorly: a measuring instrument cannot be built from something with no fixed dimension.",
+      "kept": "Cut faces that expose what is inside a part.",
+      "risk": "Atmosphere where the product needs a ruler.",
+      "hero": "https://impeccable.style/worlds/cards/dream-surreal-impossible-worlds-cloud-quarry-hero.webp"
+    },
+    {
+      "id": "challenger-vertical-feed",
+      "label": "Vertical Feed",
+      "verdict": "declined",
+      "lineage": "full-bleed short-video surface",
+      "thesis": "One item owns the viewport and the next is one snap away.",
+      "palette": ["#000000", "#ffffff", "#1a1a1a", "#e5e5e5"],
+      "materials": ["full-bleed media", "bottom scrim", "glyph rail"],
+      "viewport": "A single item filling the frame with a right rail of action glyphs.",
+      "case": "Fuses poorly: one item per viewport destroys the side-by-side comparison the whole editor exists for.",
+      "kept": "Every next state pre-loaded so movement never stalls.",
+      "risk": "Deletes the comparison that is the product.",
+      "hero": "https://impeccable.style/worlds/cards/pop-culture-shelf-vertical-video-feed-surface-hero.webp"
+    }
+  ],
+  "reroll": { "registers": ["safer", "bolder"] },
+  "buildPath": { "value": "code" },
+  "canon": true,
+  "canonCard": {
+    "label": "The category standard",
+    "thesis": "The dark three-pane editor this category always ships, executed impeccably.",
+    "palette": ["#0d1117", "#e6edf3", "#3b82f6", "#8b5cf6"],
+    "materials": ["neutral dark chrome", "resizable panels", "system UI face"],
+    "viewport": "Palette left, canvas centre, inspector right, one accent colour, familiar on sight.",
+    "risk": "Indistinguishable from every other config editor, by design."
+  },
+  "steer": true
+}

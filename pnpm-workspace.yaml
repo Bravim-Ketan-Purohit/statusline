@@ -1,2 +1,7 @@
 packages:
   - "packages/*"
+
+# pnpm 11 blocks postinstall scripts by default; esbuild needs one to fetch its
+# platform binary. Approved explicitly rather than disabling the protection.
+allowBuilds:
+  esbuild: true

@@ -48,7 +48,7 @@ function cmdRender() {
   const gitRoot = findGitRoot(cwd);
   const data: RuntimeData = {
     cc,
-    local: { now: new Date(), gitRoot: gitRoot ?? undefined,
+    local: { now: new Date(), home: homedir(), gitRoot: gitRoot ?? undefined,
              gitBranch: gitRoot ? readBranch(gitRoot) ?? undefined : undefined },
     columns,
   };

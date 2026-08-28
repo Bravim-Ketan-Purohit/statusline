@@ -1,0 +1,690 @@
+/* ============================================================================
+   THE DRAWING SHEET
+   A working mechanical drawing whose dimensioned quantity is width in columns.
+   Vellum ground, graphite linework, six CAD layer pens keyed to breakpoints.
+   ========================================================================= */
+
+:root {
+  /* --- sheet stock ------------------------------------------------------ */
+  --sheet:        #e6e0d2;   /* diazo whiteprint vellum */
+  --sheet-deep:   #dbd4c2;   /* drawing field, one step down */
+  --sheet-edge:   #cfc7b3;
+
+  /* --- ink -------------------------------------------------------------- */
+  --ink:          #23231f;   /* 12.4:1 on sheet */
+  --ink-2:        #55524a;   /*  5.9:1 on sheet */
+  --dim:          #6f6a5c;   /*  4.1:1 — dimension + witness lines */
+  --rule:         #a9a18e;   /* hairline rules only, never text */
+
+  /* --- CAD layer pens, one per breakpoint ------------------------------- */
+  --pen-xs:  #c2452d;
+  --pen-sm:  #b3701a;
+  --pen-md:  #2f7d8c;
+  --pen-lg:  #4a7a2e;
+  --pen-xl:  #7d3f8c;
+  --pen-2xl: #2b4c8c;
+  --pen: var(--pen-md);      /* active layer, set on .sheet by JS */
+
+  /* --- line weights (drafting keeps these few and fixed) ---------------- */
+  --w-hair: 1px;
+  --w-dim:  1.5px;
+  --w-edge: 2px;
+
+  --font-label: "Archivo Narrow", "Archivo Variable", system-ui, sans-serif;
+  --font-data: "JetBrains Mono Variable", ui-monospace, "SF Mono", Menlo, monospace;
+
+  --ease: cubic-bezier(0.16, 1, 0.3, 1);   /* exponential ease-out */
+  --sheet-pad: 22px;
+}
+
+* { box-sizing: border-box; }
+
+html, body, #root { height: 100%; }
+
+body {
+  margin: 0;
+  overflow: hidden;          /* the sheet owns scrolling, never the page */
+  background: var(--sheet-edge);
+  color: var(--ink);
+  font-family: var(--font-label);
+  font-size: 14px;
+  line-height: 1.45;
+  -webkit-font-smoothing: antialiased;
+}
+
+/* --- browser surfaces belong to the design, not to the browser ---------- */
+::selection { background: var(--pen); color: #fff; }
+::-webkit-scrollbar { width: 10px; height: 10px; }
+::-webkit-scrollbar-track { background: transparent; }
+::-webkit-scrollbar-thumb {
+  background: var(--rule);
+  border: 3px solid var(--sheet);
+  border-radius: 0;
+}
+::-webkit-scrollbar-thumb:hover { background: var(--dim); }
+* { scrollbar-color: var(--rule) transparent; scrollbar-width: thin; }
+:focus-visible {
+  outline: var(--w-dim) solid var(--pen);
+  outline-offset: 2px;
+}
+input, button, select, textarea { font: inherit; color: inherit; caret-color: var(--pen); }
+
+input[type="checkbox"] {
+  appearance: none;
+  width: 14px; height: 14px;
+  border: var(--w-hair) solid var(--ink);
+  background: var(--sheet);
+  display: grid;
+  place-content: center;
+  cursor: pointer;
+  flex: none;
+}
+input[type="checkbox"]:checked { background: var(--pen); border-color: var(--pen); }
+input[type="checkbox"]:checked::after {
+  content: "";
+  width: 7px; height: 4px;
+  border-left: 1.5px solid #fff;
+  border-bottom: 1.5px solid #fff;
+  transform: rotate(-45deg) translate(1px, -1px);
+}
+
+/* ===== sheet shell ====================================================== */
+
+.sheet {
+  display: grid;
+  grid-template-rows: auto 1fr auto;
+  background: var(--sheet);
+  border: var(--w-edge) solid var(--ink);
+  margin: 10px;
+  height: calc(100% - 20px);
+  width: calc(100% - 20px);
+  min-width: 0;
+  position: relative;
+  overflow: hidden;
+}
+/* the drafting sheet's inner trim line */
+.sheet::before {
+  content: "";
+  position: absolute;
+  inset: 5px;
+  border: var(--w-hair) solid var(--rule);
+  pointer-events: none;
+}
+
+/* ===== header + layer tabs ============================================== */
+
+.sheet-head {
+  display: flex;
+  align-items: stretch;
+  border-bottom: var(--w-dim) solid var(--ink);
+  min-height: 46px;
+}
+.sheet-mark {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 0 var(--sheet-pad);
+  border-right: var(--w-hair) solid var(--rule);
+}
+.sheet-mark h1 {
+  font-size: 15px;
+  letter-spacing: 0.18em;
+  text-transform: uppercase;
+  font-weight: 600;
+  margin: 0;
+}
+.sheet-mark .sub {
+  font-family: var(--font-data);
+  font-size: 10.5px;
+  color: var(--dim);
+  letter-spacing: 0.04em;
+  font-variant-numeric: tabular-nums;
+}
+
+.layers { display: flex; margin-left: auto; min-width: 0; }
+.layer-tab {
+  appearance: none;
+  border: 0;
+  border-left: var(--w-hair) solid var(--rule);
+  background: transparent;
+  padding: 0 16px;
+  cursor: pointer;
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  gap: 2px;
+  min-width: 76px;
+  transition: background 160ms var(--ease);
+}
+.layer-tab:hover { background: color-mix(in srgb, var(--tab-pen) 10%, transparent); }
+.layer-tab .id {
+  font-family: var(--font-label);
+  font-size: 12px;
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+  color: var(--ink-2);
+}
+.layer-tab .cols {
+  font-family: var(--font-data);
+  font-size: 10px;
+  color: var(--dim);
+  font-variant-numeric: tabular-nums;
+}
+/* the pen stripe is the layer's identity, drawn not implied */
+.layer-tab .pen {
+  height: 3px;
+  background: var(--tab-pen);
+  opacity: 0.28;
+  transition: opacity 160ms var(--ease);
+}
+.layer-tab[aria-selected="true"] { background: color-mix(in srgb, var(--tab-pen) 13%, transparent); }
+.layer-tab[aria-selected="true"] .pen { opacity: 1; }
+.layer-tab[aria-selected="true"] .id { color: var(--ink); font-weight: 600; }
+
+/* ===== body: parts list | field | callout =============================== */
+
+.sheet-body {
+  display: grid;
+  grid-template-columns: 218px minmax(0, 1fr) 288px;
+  min-height: 0;
+  min-width: 0;
+}
+.parts, .callout { min-height: 0; min-width: 0; overflow: auto; }
+.parts { border-right: var(--w-hair) solid var(--rule); }
+.callout { border-left: var(--w-hair) solid var(--rule); }
+
+.region-head {
+  position: sticky;
+  top: 0;
+  z-index: 2;
+  background: var(--sheet);
+  padding: 12px var(--sheet-pad) 8px;
+  border-bottom: var(--w-hair) solid var(--rule);
+  font-size: 11px;
+  letter-spacing: 0.2em;
+  text-transform: uppercase;
+  color: var(--ink-2);
+  display: flex;
+  align-items: baseline;
+  gap: 8px;
+}
+.region-head .n {
+  font-family: var(--font-data);
+  font-size: 10px;
+  color: var(--dim);
+  letter-spacing: 0;
+  margin-left: auto;
+  font-variant-numeric: tabular-nums;
+}
+
+/* ===== parts list (BOM) ================================================= */
+
+.bom { padding: 6px 0 16px; }
+.bom-group {
+  padding: 10px var(--sheet-pad) 4px;
+  font-size: 10px;
+  letter-spacing: 0.18em;
+  text-transform: uppercase;
+  color: var(--dim);
+}
+.part {
+  display: grid;
+  grid-template-columns: 26px 1fr auto;
+  align-items: center;
+  gap: 8px;
+  width: 100%;
+  padding: 6px var(--sheet-pad);
+  background: transparent;
+  border: 0;
+  border-bottom: var(--w-hair) solid transparent;
+  text-align: left;
+  cursor: grab;
+  transition: background 140ms var(--ease);
+}
+.part:hover { background: color-mix(in srgb, var(--pen) 9%, transparent); }
+.part:active { cursor: grabbing; }
+.part .no {
+  font-family: var(--font-data);
+  font-size: 10px;
+  color: var(--dim);
+  font-variant-numeric: tabular-nums;
+}
+.part .nm { font-size: 13px; color: var(--ink); }
+.part .tier {
+  font-family: var(--font-data);
+  font-size: 9.5px;
+  color: var(--dim);
+  border: var(--w-hair) solid var(--rule);
+  padding: 0 4px;
+}
+.part[data-used="true"] .nm { color: var(--ink-2); }
+.part[data-used="true"] .no::after { content: "•"; margin-left: 3px; color: var(--pen); }
+
+/* ===== drawing field ==================================================== */
+
+.field {
+  position: relative;
+  background: var(--sheet-deep);
+  display: grid;
+  grid-template-rows: auto auto auto minmax(0, 1fr);
+  min-width: 0;
+  min-height: 0;
+  overflow: hidden;
+}
+
+/* graph grid, faint — this is drafting paper, not decoration */
+.field::before {
+  content: "";
+  position: absolute;
+  inset: 0;
+  background-image:
+    linear-gradient(to right, color-mix(in srgb, var(--rule) 34%, transparent) var(--w-hair), transparent var(--w-hair)),
+    linear-gradient(to bottom, color-mix(in srgb, var(--rule) 34%, transparent) var(--w-hair), transparent var(--w-hair));
+  background-size: 16px 16px;
+  pointer-events: none;
+}
+
+.field-scroll {
+  grid-row: 1;
+  overflow: auto;
+  /* the drawing is never squeezed below its own height: a clipped specimen
+     contradicts the thesis that it is drawn at true size */
+  min-height: 196px;
+  padding: 26px 40px 10px;
+  position: relative;
+  min-width: 0;
+}
+/* the drawing: dimension and specimen share one extent, so the figure on the
+   dimension line always describes the object directly beneath it */
+/* No width transition: the drawing must track the handle exactly. An eased
+   width also thrashes layout, and the tiles' drop points are the information. */
+.drawing { position: relative; }
+
+/* --- the dimension line: the signature element ------------------------- */
+.dimension {
+  position: relative;
+  height: 40px;
+}
+.dim-svg { position: absolute; inset: 0; width: 100%; height: 100%; overflow: visible; }
+.dim-figure {
+  position: absolute;
+  top: 2px;
+  left: 50%;
+  transform: translateX(-50%);
+  background: var(--sheet-deep);
+  padding: 0 8px;
+  font-family: var(--font-data);
+  font-size: 12px;
+  font-variant-numeric: tabular-nums;
+  color: var(--ink);
+  letter-spacing: 0.02em;
+  white-space: nowrap;
+}
+.dim-figure .px { color: var(--dim); }
+
+/* --- the specimen: the real render, on the user's terminal ground ------ */
+.specimen-wrap { position: relative; padding-top: 16px; }
+.specimen {
+  font-family: var(--font-data);
+  font-size: 13px;
+  line-height: 1.65;
+  padding: 14px 0;
+  border: var(--w-hair) solid var(--ink);
+  overflow: hidden;
+  position: relative;
+  font-variant-ligatures: none;
+}
+.spec-row { white-space: pre; padding: 0 12px; }
+.spec-tile {
+  display: inline-block;
+  cursor: pointer;
+  position: relative;
+}
+.spec-tile[data-selected="true"] { box-shadow: inset 0 0 0 1px #fff, 0 0 0 1px var(--pen); }
+/* ghost cell: a dropped tile still holds its place, drawn as absence */
+.spec-tile[data-ghost="true"] {
+  opacity: 0.26;
+  filter: grayscale(1);
+}
+.spec-tile[data-ghost="true"]::after {
+  content: "";
+  position: absolute;
+  inset: 50% 0 auto;
+  border-top: var(--w-hair) dashed currentColor;
+}
+
+/* witness lines drop from each tile edge to the dimension line */
+.witness {
+  position: absolute;
+  top: 0; left: 0; right: 0; height: 16px;
+  pointer-events: none;
+  overflow: visible;
+}
+
+.field-empty {
+  display: grid;
+  justify-items: start;
+  align-content: start;
+  gap: 10px;
+  padding: 26px var(--sheet-pad);
+  color: var(--ink-2);
+}
+.field-empty p { margin: 0; max-width: 34ch; font-size: 13px; }
+
+/* --- width drag handle: the primary action ---------------------------- */
+.handle {
+  grid-row: 3;
+  margin: 0 40px 18px;
+  height: 34px;
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+.handle-track {
+  flex: 1;
+  height: 22px;
+  position: relative;
+  cursor: ew-resize;
+  touch-action: none;
+}
+.handle-track::before {
+  content: "";
+  position: absolute;
+  top: 10px;
+  left: 0; right: 0;
+  height: var(--w-hair);
+  background: var(--dim);
+}
+.handle-grip {
+  position: absolute;
+  top: 2px;
+  width: 12px;
+  height: 18px;
+  margin-left: -6px;
+  background: var(--sheet);
+  border: var(--w-dim) solid var(--ink);
+  cursor: ew-resize;
+}
+.handle-grip::after {
+  content: "";
+  position: absolute;
+  inset: 3px 4px;
+  border-left: var(--w-hair) solid var(--dim);
+  border-right: var(--w-hair) solid var(--dim);
+}
+.handle-figure {
+  font-family: var(--font-data);
+  font-size: 11px;
+  color: var(--ink-2);
+  font-variant-numeric: tabular-nums;
+  min-width: 128px;
+}
+
+/* ===== detail callout (inspector) ====================================== */
+
+.callout-body { padding: 4px 0 20px; }
+.field-row {
+  display: grid;
+  grid-template-columns: 88px 1fr;
+  gap: 10px;
+  align-items: center;
+  padding: 7px var(--sheet-pad);
+}
+.field-row > label {
+  font-size: 11px;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+  color: var(--ink-2);
+}
+.field-row input[type="text"],
+.field-row input[type="number"],
+.field-row select {
+  width: 100%;
+  background: var(--sheet);
+  border: var(--w-hair) solid var(--rule);
+  border-radius: 0;
+  padding: 5px 7px;
+  font-family: var(--font-data);
+  font-size: 12px;
+}
+.field-row input:focus, .field-row select:focus { border-color: var(--pen); outline: none; }
+.field-row input[disabled], .field-row select[disabled] {
+  background: color-mix(in srgb, var(--sheet-edge) 60%, transparent);
+  color: var(--dim);
+  cursor: not-allowed;
+}
+.swatch-row { display: flex; gap: 6px; align-items: center; }
+.swatch {
+  width: 26px; height: 22px;
+  border: var(--w-hair) solid var(--ink);
+  padding: 0;
+  cursor: pointer;
+  background: none;
+}
+.swatch input { opacity: 0; width: 100%; height: 100%; cursor: pointer; }
+
+/* the capability note: why a control is unavailable, never a silent no-op */
+.cap-note {
+  grid-column: 1 / -1;
+  font-size: 11px;
+  color: var(--dim);
+  display: flex;
+  gap: 6px;
+  align-items: flex-start;
+  padding-top: 2px;
+}
+
+.section-rule {
+  margin: 14px var(--sheet-pad) 6px;
+  padding-top: 10px;
+  border-top: var(--w-hair) solid var(--rule);
+  font-size: 10px;
+  letter-spacing: 0.2em;
+  text-transform: uppercase;
+  color: var(--dim);
+}
+
+/* per-breakpoint tri-state: inherit / on / off, never a lying checkbox */
+.tri { display: flex; border: var(--w-hair) solid var(--rule); }
+.tri button {
+  flex: 1;
+  border: 0;
+  background: transparent;
+  padding: 4px 0;
+  font-size: 10px;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: var(--ink-2);
+  cursor: pointer;
+}
+.tri button + button { border-left: var(--w-hair) solid var(--rule); }
+.tri button[aria-pressed="true"] { background: var(--pen); color: #fff; }
+
+/* ===== title block ===================================================== */
+
+.title-block {
+  display: flex;
+  border-top: var(--w-dim) solid var(--ink);
+  font-family: var(--font-data);
+  font-size: 10.5px;
+  font-variant-numeric: tabular-nums;
+  min-height: 40px;
+}
+.tb-cell {
+  flex: 0 1 auto;
+  min-width: 0;
+  padding: 6px 14px;
+  border-right: var(--w-hair) solid var(--rule);
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  gap: 1px;
+  min-width: 0;
+}
+.tb-cell .k {
+  font-family: var(--font-label);
+  font-size: 9px;
+  letter-spacing: 0.16em;
+  text-transform: uppercase;
+  color: var(--dim);
+}
+.tb-cell .v { color: var(--ink); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.tb-spacer { flex: 1; border-right: var(--w-hair) solid var(--rule); }
+.tb-actions {
+  display: flex;
+  flex-direction: row;
+  align-items: stretch;
+  border-right: 0;
+  padding: 0;
+}
+.tb-actions .btn { border: 0; border-left: var(--w-hair) solid var(--rule); }
+
+.btn {
+  appearance: none;
+  background: var(--sheet);
+  border: var(--w-hair) solid var(--ink);
+  padding: 6px 12px;
+  font-family: var(--font-label);
+  font-size: 11px;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+  cursor: pointer;
+  transition: background 140ms var(--ease), color 140ms var(--ease);
+}
+.btn:hover:not(:disabled) { background: var(--ink); color: var(--sheet); }
+.btn:disabled { color: var(--dim); border-color: var(--rule); cursor: not-allowed; }
+.btn-pen { border-color: var(--pen); color: var(--pen); }
+.btn-pen:hover:not(:disabled) { background: var(--pen); color: #fff; }
+
+.toast {
+  position: fixed;
+  left: 50%;
+  bottom: 26px;
+  transform: translateX(-50%);
+  background: var(--ink);
+  color: var(--sheet);
+  padding: 8px 16px;
+  font-family: var(--font-data);
+  font-size: 12px;
+  border: var(--w-hair) solid var(--ink);
+  animation: rise 260ms var(--ease);
+}
+@keyframes rise { from { opacity: 0; transform: translate(-50%, 6px); } }
+
+@media (prefers-reduced-motion: reduce) {
+  * { animation-duration: 1ms !important; transition-duration: 1ms !important; }
+}
+
+/* ===== narrow: the sheet folds to one column =========================== */
+@media (max-width: 1080px) {
+  .sheet-body { min-height: 0; }
+  /* stacked: the field scrolls as a whole rather than crushing the drawing */
+  .field { overflow-y: auto; }
+  .title-block { flex-wrap: wrap; }
+  .tb-actions { flex: 1 0 100%; border-top: var(--w-hair) solid var(--rule); }
+  .tb-actions .btn { flex: 1; padding: 8px 6px; }
+  .field-scroll { padding: 18px 20px 8px; }
+  .handle { margin: 0 20px 14px; }
+  .tb-spacer { display: none; }
+  .tb-cell { padding: 5px 10px; }
+  /* minmax(0,1fr), not 1fr: a bare 1fr is minmax(auto,1fr) and refuses to
+     shrink below the drawing's min-content, which overflows the sheet. */
+  .sheet-body { grid-template-columns: minmax(0, 1fr); grid-template-rows: auto 1fr auto; }
+  .parts { border-right: 0; border-bottom: var(--w-hair) solid var(--rule); max-height: 26vh; }
+  .callout { border-left: 0; border-top: var(--w-hair) solid var(--rule); max-height: 300px; }
+  /* six layers must fit the sheet rather than scroll out of sight: the tab
+     sheds its threshold figure and keeps its pen stripe and id. */
+  .layers { overflow-x: auto; scrollbar-width: none; }
+  .layers::-webkit-scrollbar { display: none; }
+  .layer-tab { min-width: 0; flex: 1; padding: 0 6px; }
+  .layer-tab .cols { display: none; }
+  .sheet-mark { padding: 0 12px; }
+  .sheet-mark h1 { font-size: 13px; letter-spacing: 0.12em; }
+  .sheet-mark .sub { display: none; }
+  .title-block { flex-wrap: wrap; }
+}
+
+
+/* ===== drawing schedule ================================================= */
+
+.schedule {
+  grid-row: 2;
+  margin: 4px 40px 0;
+  max-width: 520px;
+  overflow-x: auto;
+}
+.schedule table {
+  width: 100%;
+  table-layout: fixed;
+  border-collapse: collapse;
+  font-family: var(--font-data);
+  font-size: 11px;
+  font-variant-numeric: tabular-nums;
+  background: color-mix(in srgb, var(--sheet) 78%, transparent);
+}
+.schedule caption {
+  text-align: left;
+  font-family: var(--font-label);
+  font-size: 10px;
+  letter-spacing: 0.2em;
+  text-transform: uppercase;
+  color: var(--dim);
+  padding: 0 0 5px;
+}
+.schedule th, .schedule td {
+  border: var(--w-hair) solid var(--rule);
+  padding: 3px 8px;
+  text-align: right;
+}
+.schedule thead th {
+  font-family: var(--font-label);
+  font-size: 9.5px;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+  color: var(--ink-2);
+  font-weight: 400;
+}
+.schedule tbody th { text-align: left; font-weight: 400; color: var(--ink); }
+.schedule tbody th span.lay { display: inline-flex; align-items: center; gap: 6px; }
+.schedule tbody tr { cursor: pointer; }
+.schedule tbody tr:hover { background: color-mix(in srgb, var(--pen) 10%, transparent); }
+.schedule tbody tr[data-active="true"] { background: color-mix(in srgb, var(--pen) 16%, transparent); }
+.schedule tbody tr[data-active="true"] th { font-weight: 600; }
+.schedule td[data-warn="true"] { color: var(--pen-xs); }
+.pen-chip { width: 8px; height: 8px; display: inline-block; flex: none; }
+
+@media (max-width: 1080px) {
+  .schedule { margin: 4px 20px 0; max-width: none; }
+  .schedule caption { padding-bottom: 3px; }
+}
+
+
+/* Under 640px the schedule sheds its two derived columns rather than clipping
+   them: layer, width, and what survives are the reading that matters. */
+@media (max-width: 640px) {
+  .schedule th:nth-child(5), .schedule td:nth-child(5) { display: none; }
+  .schedule { max-width: 100%; }
+  .schedule table { font-size: 10.5px; }
+  .schedule th, .schedule td { padding: 3px 6px; }
+}
+
+
+/* Detail callout leader: the drawing convention that ties a blown-up detail
+   back to the part it enlarges. Drawn, not implied. */
+.callout .region-head { position: relative; }
+.callout[data-linked="true"] .region-head::before {
+  content: "";
+  position: absolute;
+  left: -1px; top: 50%;
+  width: 12px; height: var(--w-dim);
+  background: var(--pen);
+}
+.callout[data-linked="true"] .region-head::after {
+  content: "";
+  position: absolute;
+  left: -5px; top: calc(50% - 3px);
+  width: 7px; height: 7px;
+  border: var(--w-dim) solid var(--pen);
+  border-radius: 50%;
+  background: var(--sheet);
+}

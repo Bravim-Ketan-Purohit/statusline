@@ -9,7 +9,8 @@
     "verify": "pnpm build && pnpm test"
   },
   "devDependencies": {
-    "typescript": "^5.6.3",
-    "@types/node": "^22.9.0"
+    "@types/node": "^22.9.0",
+    "playwright": "1.49.0",
+    "typescript": "^5.6.3"
   }
 }
