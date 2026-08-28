@@ -1,0 +1,16 @@
+name: ci
+on: [push, pull_request]
+jobs:
+  verify:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: pnpm/action-setup@v4
+        with: { version: 11 }
+      - uses: actions/setup-node@v4
+        with: { node-version: 22, cache: pnpm }
+      - run: pnpm install --frozen-lockfile
+      - run: pnpm build
+      # Unit tests, then the perf gate. bench.ts exits non-zero on regression,
+      # which is what makes "fail the build if it regresses" real.
+      - run: pnpm test

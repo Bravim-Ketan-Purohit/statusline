@@ -1,0 +1,112 @@
+[
+ {
+  "s": "hello",
+  "w": 5,
+  "why": "ascii"
+ },
+ {
+  "s": "",
+  "w": 0,
+  "why": "empty"
+ },
+ {
+  "s": "\u001b[31mred\u001b[0m",
+  "w": 3,
+  "why": "SGR stripped"
+ },
+ {
+  "s": "\u001b[38;2;255;0;0mx\u001b[0m",
+  "w": 1,
+  "why": "truecolor SGR stripped"
+ },
+ {
+  "s": "\u001b[38;5;114m██\u001b[0m",
+  "w": 2,
+  "why": "256-colour + block chars"
+ },
+ {
+  "s": "\u001b]8;;https://x.com\u001b\\link\u001b]8;;\u001b\\",
+  "w": 4,
+  "why": "OSC 8 stripped, text kept"
+ },
+ {
+  "s": "你好",
+  "w": 4,
+  "why": "CJK wide = 2 each"
+ },
+ {
+  "s": "안녕",
+  "w": 4,
+  "why": "Hangul syllables wide"
+ },
+ {
+  "s": "あ",
+  "w": 2,
+  "why": "hiragana wide"
+ },
+ {
+  "s": "Ａ",
+  "w": 2,
+  "why": "fullwidth latin A"
+ },
+ {
+  "s": "é",
+  "w": 1,
+  "why": "e + combining acute = one cluster"
+ },
+ {
+  "s": "café",
+  "w": 4,
+  "why": "combining mark adds no width"
+ },
+ {
+  "s": "à́̂",
+  "w": 1,
+  "why": "stacked combining marks"
+ },
+ {
+  "s": "🚀",
+  "w": 2,
+  "why": "rocket emoji"
+ },
+ {
+  "s": "❤️",
+  "w": 2,
+  "why": "heart + VS16 = emoji presentation"
+ },
+ {
+  "s": "❤︎",
+  "w": 1,
+  "why": "heart + VS15 = text presentation"
+ },
+ {
+  "s": "👨‍👩‍👧",
+  "w": 2,
+  "why": "ZWJ family = one cluster"
+ },
+ {
+  "s": "⚠",
+  "w": 1,
+  "why": "bare warning sign is narrow"
+ },
+ {
+  "s": "█░",
+  "w": 2,
+  "why": "bar characters are narrow"
+ },
+ {
+  "s": "◷ time 3:11 PM",
+  "w": 14,
+  "why": "real tile content"
+ },
+ {
+  "s": "​",
+  "w": 0,
+  "why": "zero width space"
+ },
+ {
+  "s": "⇡ 3",
+  "w": 3,
+  "why": "arrow glyph narrow"
+ }
+]

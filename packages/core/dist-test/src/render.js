@@ -1,0 +1,30 @@
+import { buildRow, fitRow } from "./layout.js";
+import { renderRowAnsi } from "./adapters/ansi.js";
+const STYLE_OPTS = {
+    pills: { pad: 1, gap: 1 },
+    powerline: { pad: 1, gap: 0 },
+    plain: { pad: 0, gap: 3 },
+};
+/**
+ * The one entry point every target shares. Returns finished lines.
+ * A throwing tile is already contained in buildRow; this wrapper is the last
+ * line of defence -- the CLI adds a model-name fallback on top.
+ */
+export function renderAnsi(cfg, data) {
+    const style = cfg.targets.claudeCode.style;
+    const opts = STYLE_OPTS[style] ?? STYLE_OPTS.pills;
+    const cols = data.columns;
+    const lines = [];
+    for (let i = 0; i < cfg.rows.length; i++) {
+        const built = buildRow(cfg, i, data, cols);
+        if (!built.length)
+            continue;
+        const { kept } = fitRow(built, cols, opts.gap, opts.pad);
+        if (!kept.length)
+            continue;
+        lines.push(renderRowAnsi(kept, cfg, opts));
+        if (lines.length >= cfg.targets.claudeCode.maxRows)
+            break;
+    }
+    return lines;
+}
