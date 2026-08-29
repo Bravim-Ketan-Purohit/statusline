@@ -18,7 +18,11 @@ const STYLE_OPTS: Record<string, AnsiOptions> = {
 export function renderAnsi(cfg: Config, data: RuntimeData): string[] {
   const style = cfg.targets.claudeCode.style;
   const base = STYLE_OPTS[style] ?? STYLE_OPTS.pills!;
-  const opts = { ...base, nowMs: (data.local.now ?? new Date()).getTime() };
+  const opts = {
+    ...base,
+    nowMs: (data.local.now ?? new Date()).getTime(),
+    seed: data.cc.session_id ?? "",
+  };
   const cols = data.columns;
   const lines: string[] = [];
 
@@ -27,7 +31,7 @@ export function renderAnsi(cfg: Config, data: RuntimeData): string[] {
     if (!built.length) continue;
     const { kept } = fitRow(built, cols, opts.gap, opts.pad);
     if (!kept.length) continue;
-    lines.push(renderRowAnsi(kept, cfg, opts));
+    lines.push(renderRowAnsi(kept, cfg, opts, lines.length, cfg.rows.length));
     if (lines.length >= cfg.targets.claudeCode.maxRows) break;
   }
   return lines;

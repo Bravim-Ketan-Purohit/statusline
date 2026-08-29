@@ -790,3 +790,40 @@ input[type="range"]::-moz-range-thumb {
   background: color-mix(in srgb, var(--rule) 30%, transparent);
   padding: 0 3px;
 }
+
+/* ===== fill editor ====================================================== */
+
+.fill-strip {
+  width: 100%;
+  border: var(--w-hair) solid var(--ink);
+  display: flex;
+  flex-direction: column;
+  height: 40px;
+}
+.strip-row { display: flex; flex: 1; }
+.strip-row i { flex: 1; display: block; }
+
+.stops { display: flex; flex-wrap: wrap; gap: 4px; align-items: center; }
+.stop {
+  display: inline-flex;
+  align-items: center;
+  gap: 2px;
+  border: var(--w-hair) solid var(--rule);
+  padding: 1px;
+}
+.stop .swatch { width: 18px; height: 18px; }
+.stop-pos {
+  width: 44px;
+  border: 0;
+  background: transparent;
+  font-family: var(--font-data);
+  font-size: 10px;
+  padding: 0 2px;
+  color: var(--ink-2);
+}
+.stop-x {
+  border: 0; background: transparent; cursor: pointer;
+  color: var(--dim); padding: 0 2px; line-height: 1;
+}
+.stop-x:hover { color: var(--pen-xs); }
+.stop-add { padding: 2px 7px; font-size: 10px; letter-spacing: 0.08em; }

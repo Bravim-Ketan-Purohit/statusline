@@ -83,7 +83,11 @@ export function buildRow(
 
     let value: Span[];
     try {
-      value = mod.render({ ...mod.defaultProps, ...tile.props }, data, mode);
+      // The band renders its own style.fill, which tiles otherwise cannot see.
+      const scoped = tile.style.fill
+        ? { ...data, custom: { ...data.custom, "fill-band": JSON.stringify(tile.style.fill) } }
+        : data;
+      value = mod.render({ ...mod.defaultProps, ...tile.props }, scoped, mode);
     } catch {
       continue; // a throwing tile disappears; it never takes the row with it
     }

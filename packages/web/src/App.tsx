@@ -39,21 +39,21 @@ export default function App() {
   // One clock for the whole sheet, so the sample data and any flowing
   // gradient advance together. Only runs when something is actually animated.
   const animating = useMemo(() => {
-    if (config.theme.terminalGradient?.animated) return true;
-    return config.rows.some((r) => r.tiles.some((t) => t.style.gradient?.animated));
+    if (config.theme.terminalFill?.animated) return true;
+    return config.rows.some((r) => r.tiles.some((t) => t.style.fill?.animated));
   }, [config]);
 
   useEffect(() => {
     if (!animating) { setPhase(0); return; }
     let raf = 0, last = 0;
-    const speed = config.theme.terminalGradient?.speed ?? 0.25;
+    const speed = config.theme.terminalFill?.speed ?? 0.25;
     const tick = (ts: number) => {
       if (ts - last > 33) { setPhase((ts / 1000) * speed); last = ts; }
       raf = requestAnimationFrame(tick);
     };
     raf = requestAnimationFrame(tick);
     return () => cancelAnimationFrame(raf);
-  }, [animating, config.theme.terminalGradient?.speed]);
+  }, [animating, config.theme.terminalFill?.speed]);
 
   const data = useMemo(() => sampleData(new Date()), []);
   const render = useMemo(
@@ -267,9 +267,9 @@ export default function App() {
         </main>
 
         {sheetSelected || !selTile
-          ? <SheetInspector cfg={config} onChange={setConfig} />
-          : <DetailCallout cfg={config} tile={selTile} bpId={bp.id} measured={measured}
-                           onChange={updateTile} onDelete={deleteTile} />}
+          ? <SheetInspector cfg={config} phase={phase} onChange={setConfig} />
+          : <DetailCallout cfg={config} tile={selTile} bpId={bp.id} phase={phase}
+                           measured={measured} onChange={updateTile} onDelete={deleteTile} />}
       </div>
 
       <footer className="title-block">

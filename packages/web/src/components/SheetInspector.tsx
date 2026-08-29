@@ -1,13 +1,14 @@
 import type { Config } from "@statusline/core";
 import { IconLocked } from "./Icons";
+import { FillEditor } from "./FillEditor";
 
 /**
  * Background inspector: opens when you click the drawing field itself rather
  * than a tile. Everything here paints behind the whole bar.
  */
 export function SheetInspector({
-  cfg, onChange,
-}: { cfg: Config; onChange: (next: Config) => void }) {
+  cfg, phase, onChange,
+}: { cfg: Config; phase: number; onChange: (next: Config) => void }) {
   const th = cfg.theme;
   const g = th.terminalGradient;
   const setTheme = (patch: Partial<Config["theme"]>) =>
@@ -34,54 +35,8 @@ export function SheetInspector({
           </div>
         </div>
 
-        <div className="section-rule">Gradient</div>
-        <div className="field-row">
-          <label htmlFor="s-grad">Enable</label>
-          <input id="s-grad" type="checkbox" checked={!!g}
-                 onChange={(e) => setTheme({ terminalGradient: e.target.checked
-                   ? { from: th.terminalBg, to: "#5f00af", animated: false, speed: 0.25 } : null })} />
-        </div>
-        {g && (
-          <>
-            <div className="field-row">
-              <label>Stops</label>
-              <div className="swatch-row">
-                <span className="swatch" style={{ background: g.from }}>
-                  <input type="color" value={g.from}
-                         onChange={(e) => setTheme({ terminalGradient: { ...g, from: e.target.value } })} />
-                </span>
-                <span className="swatch" style={{ background: g.to }}>
-                  <input type="color" value={g.to}
-                         onChange={(e) => setTheme({ terminalGradient: { ...g, to: e.target.value } })} />
-                </span>
-              </div>
-            </div>
-            <div className="field-row">
-              <label htmlFor="s-anim">Flowing</label>
-              <input id="s-anim" type="checkbox" checked={g.animated}
-                     onChange={(e) => setTheme({ terminalGradient: { ...g, animated: e.target.checked } })} />
-            </div>
-            {g.animated && (
-              <div className="field-row">
-                <label htmlFor="s-speed">Speed</label>
-                <input id="s-speed" type="range" min={0.05} max={2} step={0.05} value={g.speed}
-                       onChange={(e) => setTheme({ terminalGradient: { ...g, speed: Number(e.target.value) } })} />
-              </div>
-            )}
-            <div className="field-row">
-              <div className="cap-note">
-                <IconLocked size={13} />
-                <span>
-                  A flowing gradient animates smoothly here, but a terminal only
-                  redraws when Claude Code re-runs the script. With
-                  <code> refreshInterval: 1</code> that is one step per second —
-                  a slow pulse, not a flow. tmux behaves the same via
-                  <code> status-interval</code>.
-                </span>
-              </div>
-            </div>
-          </>
-        )}
+        <FillEditor fill={th.terminalFill} phase={phase} scope="sheet"
+                    onChange={(f) => setTheme({ terminalFill: f })} />
 
         <div className="section-rule">Colour mode</div>
         <div className="field-row">
@@ -99,17 +54,7 @@ export function SheetInspector({
           </div>
         </div>
 
-        <div className="section-rule">Not available</div>
-        <div className="field-row">
-          <div className="cap-note">
-            <IconLocked size={13} />
-            <span>
-              Images and GIFs cannot be a fill. Claude Code captures the script's
-              stdout as text, so there is no surface to draw a raster onto. Flowing
-              gradients and block-character fills are the closest a terminal gets.
-            </span>
-          </div>
-        </div>
+
       </div>
     </aside>
   );

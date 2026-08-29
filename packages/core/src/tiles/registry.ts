@@ -17,6 +17,7 @@ import { venvTile, nodeVersionTile, pythonVersionTile, hostnameTile, batteryTile
 import { verseTile, trackTile, skillsTile } from "./personal.js";
 import { playPauseTile, nextTile, prevTile, volUpTile, volDownTile, nowPlayingTile } from "./media.js";
 import { textTile, spacerTile, separatorTile, commandTile } from "./layout.js";
+import { bandTile } from "./band.js";
 
 /**
  * Adding a tile = adding one file and one line here. Nothing else in the
@@ -39,7 +40,7 @@ const MODULES: TileModule<any>[] = [
   // media
   nowPlayingTile, playPauseTile, prevTile, nextTile, volUpTile, volDownTile,
   // layout
-  textTile, spacerTile, separatorTile, commandTile,
+  textTile, spacerTile, separatorTile, commandTile, bandTile,
 ];
 
 export const registry = new Map<string, TileModule<any>>(MODULES.map((m) => [m.id, m]));

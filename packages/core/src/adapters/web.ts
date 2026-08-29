@@ -3,6 +3,7 @@ import type { RuntimeData } from "../runtime.js";
 import type { Span } from "../spans.js";
 import { buildRow, fitRow, resolveBreakpoint, type ResolvedTile } from "../layout.js";
 import { resolveColor, hexToRgb, rgbTo256, rgbTo16 } from "./ansi.js";
+import type { Fill } from "../fill.js";
 
 /**
  * The web preview must not be a CSS approximation. It runs the SAME layout
@@ -31,6 +32,7 @@ export interface WebTile {
   bg?: string;
   fg?: string;
   gradient?: { from: string; to: string; animated: boolean; speed: number } | null;
+  fill?: Fill;
   /** true when the layout solver dropped it at this width */
   ghost: boolean;
   /** true when the tile has no data and this is a builder placeholder */
@@ -123,6 +125,7 @@ function toWebTile(rt: ResolvedTile, cfg: Config, ghost: boolean, rowIndex: numb
           speed: g.speed,
         }
       : null,
+    fill: rt.style.fill,
     ghost,
     empty: rt.empty ?? false,
   };

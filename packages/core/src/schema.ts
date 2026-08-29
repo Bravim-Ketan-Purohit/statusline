@@ -1,9 +1,39 @@
 import { z } from "zod";
 
-export const CONFIG_VERSION = 1;
+export const CONFIG_VERSION = 2;
 
 const Hex = z.string().regex(/^#[0-9a-fA-F]{6}$/, "expected #rrggbb");
 const ColorRef = z.union([Hex, z.string().startsWith("palette:")]);
+
+export const FillStopSchema = z.object({ color: Hex, pos: z.number().min(0).max(1) });
+
+export const FillModeSchema = z.enum([
+  "linear", "radial", "conic", "diamond", "wave", "ripple", "spiral",
+  "barber", "comet", "scan", "plasma", "pulse", "breathe", "rainbow", "strobe",
+]);
+
+export const CellMatrixSchema = z.object({
+  w: z.number().int().min(1).max(256),
+  h: z.number().int().min(1).max(64),
+  data: z.array(Hex).max(256 * 64),
+});
+
+export const FillSchema = z.object({
+  kind: z.enum(["none", "gradient", "image"]).default("none"),
+  stops: z.array(FillStopSchema).min(1).max(16)
+    .default([{ color: "#2b0b52", pos: 0 }, { color: "#7b2ff7", pos: 1 }]),
+  mode: FillModeSchema.default("linear"),
+  angle: z.number().min(-360).max(360).default(0),
+  origin: z.tuple([z.number().min(0).max(1), z.number().min(0).max(1)]).default([0.5, 0.5]),
+  animated: z.boolean().default(false),
+  speed: z.number().min(0.01).max(4).default(0.25),
+  scale: z.number().min(0.05).max(12).default(1),
+  cells: CellMatrixSchema.optional(),
+  rotate: z.object({
+    palettes: z.array(z.array(FillStopSchema).min(1).max(16)).max(24),
+    every: z.enum(["session", "hourly", "daily"]).default("daily"),
+  }).optional(),
+});
 
 export const GradientSchema = z.object({
   from: ColorRef,
@@ -25,6 +55,8 @@ export const TileStyleSchema = z.object({
   bg: ColorRef.optional(),
   fg: ColorRef.optional(),
   gradient: GradientSchema.nullable().default(null),
+  /** Richer than `gradient`: modes, multi-stop ramps, baked images. */
+  fill: FillSchema.optional(),
   glyph: z.string().default(""),
   label: z.string().default(""),
   labelDim: z.boolean().default(true),
@@ -84,6 +116,8 @@ export const ConfigSchema = z.object({
       terminalBg: Hex.default("#16181c"),
       /** Optional gradient behind the whole bar, same rules as a tile's. */
       terminalGradient: GradientSchema.nullable().default(null),
+      /** The whole-bar fill. Supersedes terminalGradient; v1 configs migrate. */
+      terminalFill: FillSchema.optional(),
       palette: z.record(Hex).default({}),
       colorMode: z.enum(["ansi16", "ansi256", "truecolor"]).default("truecolor"),
       font: z.object({ nerdFont: z.boolean().default(false) }).default({}),
@@ -125,13 +159,37 @@ export type TileStyle = z.infer<typeof TileStyleSchema>;
  * Migration path stub. The spec says the schema WILL change, so the door is
  * open from v1: add `if (v === 1) { ...; v = 2; }` steps here.
  */
+const toFill = (g: { from: string; to: string; animated?: boolean; speed?: number } | null | undefined) =>
+  g ? {
+    kind: "gradient" as const,
+    stops: [{ color: g.from, pos: 0 }, { color: g.to, pos: 1 }],
+    mode: "linear" as const, angle: 0, origin: [0.5, 0.5] as [number, number],
+    animated: !!g.animated, speed: g.speed ?? 0.25, scale: 1,
+  } : undefined;
+
 export function migrate(raw: unknown): unknown {
-  const obj = raw as { version?: number };
-  const v = typeof obj?.version === "number" ? obj.version : CONFIG_VERSION;
+  const obj = raw as Record<string, any>;
+  let v = typeof obj?.version === "number" ? obj.version : CONFIG_VERSION;
   if (v > CONFIG_VERSION) {
     throw new Error(
       `config version ${v} is newer than this build supports (${CONFIG_VERSION}); upgrade the CLI`
     );
+  }
+  if (v === 1) {
+    // v2 replaces the two-stop `gradient` with a full `fill`. The old key is
+    // left in place so a v1 CLI reading the same file still renders.
+    const next: Record<string, any> = { ...obj, version: 2 };
+    const tf = toFill(obj?.theme?.terminalGradient);
+    if (tf) next.theme = { ...obj.theme, terminalFill: tf };
+    next.rows = (obj.rows ?? []).map((r: any) => ({
+      ...r,
+      tiles: (r.tiles ?? []).map((t: any) => {
+        const f = toFill(t?.style?.gradient);
+        return f ? { ...t, style: { ...t.style, fill: f } } : t;
+      }),
+    }));
+    v = 2;
+    return next;
   }
   return raw;
 }

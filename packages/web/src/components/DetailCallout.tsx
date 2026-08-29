@@ -1,6 +1,7 @@
 import type { Config, Tile } from "@statusline/core";
 import { getTile } from "@statusline/core";
 import { IconLocked, IconTrash } from "./Icons";
+import { FillEditor } from "./FillEditor";
 
 /**
  * Detail callout. Cut faces: the tile's measured internals are exposed, not
@@ -11,11 +12,12 @@ import { IconLocked, IconTrash } from "./Icons";
 type Tri = "inherit" | "on" | "off";
 
 export function DetailCallout({
-  cfg, tile, bpId, measured, onChange, onDelete,
+  cfg, tile, bpId, phase, measured, onChange, onDelete,
 }: {
   cfg: Config;
   tile: Tile | null;
   bpId: string;
+  phase: number;
   measured: { width: number; ghost: boolean } | null;
   onChange: (next: Tile) => void;
   onDelete: () => void;
@@ -98,51 +100,10 @@ export function DetailCallout({
             <code style={{ fontSize: 11, color: "var(--dim)" }}>{tile.style.fg ?? "none"}</code>
           </div>
         </div>
-        <div className="field-row">
-          <label htmlFor="d-grad">Gradient</label>
-          <div className="swatch-row">
-            <input id="d-grad" type="checkbox" checked={!!tile.style.gradient}
-                   onChange={(e) => setStyle({ gradient: e.target.checked
-                     ? { from: tile.style.bg ?? "#005f87", to: "#5f0087", animated: false, speed: 0.25 }
-                     : null })} />
-            {tile.style.gradient && (
-              <>
-                <span className="swatch" style={{ background: tile.style.gradient.from }}>
-                  <input type="color" value={tile.style.gradient.from}
-                         onChange={(e) => setStyle({ gradient: { ...tile.style.gradient!, from: e.target.value } })} />
-                </span>
-                <span className="swatch" style={{ background: tile.style.gradient.to }}>
-                  <input type="color" value={tile.style.gradient.to}
-                         onChange={(e) => setStyle({ gradient: { ...tile.style.gradient!, to: e.target.value } })} />
-                </span>
-              </>
-            )}
-          </div>
-        </div>
-
-        {tile.style.gradient && (
-          <>
-            <div className="field-row">
-              <label htmlFor="d-anim">Flowing</label>
-              <input id="d-anim" type="checkbox" checked={tile.style.gradient.animated}
-                     onChange={(e) => setStyle({ gradient: { ...tile.style.gradient!, animated: e.target.checked } })} />
-            </div>
-            {tile.style.gradient.animated && (
-              <div className="field-row">
-                <label htmlFor="d-speed">Speed</label>
-                <input id="d-speed" type="range" min={0.05} max={2} step={0.05}
-                       value={tile.style.gradient.speed}
-                       onChange={(e) => setStyle({ gradient: { ...tile.style.gradient!, speed: Number(e.target.value) } })} />
-              </div>
-            )}
-            <div className="field-row">
-              <div className="cap-note">
-                <IconLocked size={13} />
-                <span>Flows smoothly here; a terminal only advances it once per redraw (1s floor).</span>
-              </div>
-            </div>
-          </>
-        )}
+      </div>
+      <div className="callout-body" style={{ paddingTop: 0 }}>
+        <FillEditor fill={tile.style.fill} phase={phase} scope="tile"
+                    onChange={(f) => setStyle({ fill: f })} />
 
         <div className="section-rule">Layer {bpId}</div>
         <div className="field-row">

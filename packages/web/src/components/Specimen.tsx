@@ -1,5 +1,6 @@
 import { useLayoutEffect, useRef, useState } from "react";
 import type { WebRender, WebTile, Config } from "@statusline/core";
+import { fillColorAt } from "@statusline/core";
 import { IconDimension } from "./Icons";
 
 /**
@@ -21,28 +22,47 @@ function mix(a: string, b: string, t: number) {
   return `#${c(r1!, r2!)}${c(g1!, g2!)}${c(b1!, b2!)}`;
 }
 
+/**
+ * Painted through core's fill evaluator, cell by cell, exactly as the ANSI
+ * adapter does. If this used its own CSS gradient the preview would drift from
+ * the terminal, which is the one thing the whole project exists to prevent.
+ */
 function TileSpans({ tile, phase }: { tile: WebTile; phase: number }) {
-  const grad = tile.gradient;
-  return (
-    <>
-      <span style={{ background: tile.bg, color: tile.fg }}> </span>
-      {tile.spans.map((s, i) => {
-        if (grad) {
-          const chars = [...s.text];
-          return chars.map((ch, j) => {
-            const base = chars.length > 1 ? j / (chars.length - 1) : 0;
-            const t = grad.animated ? Math.abs(((base + phase) % 2) - 1) : base;
-            return <span key={`${i}-${j}`} style={{ background: tile.bg, color: mix(grad.from, grad.to, t) }}>{ch}</span>;
-          });
-        }
-        return (
+  const f = tile.fill;
+  const width = tile.width;
+  const now = phase * 1000;
+  let col = 0;
+  const cell = (ch: string, key: string, span?: { fg?: string; bold?: boolean; dim?: boolean }) => {
+    const bg = f ? fillColorAt(f, col, 0, Math.max(1, width), 1, now, "preview") : tile.bg;
+    col += 1;
+    return (
+      <span key={key} style={{
+        background: bg || tile.bg,
+        color: span?.fg ?? tile.fg,
+        fontWeight: span?.bold ? 700 : undefined,
+        opacity: span?.dim ? 0.62 : undefined,
+      }}>{ch}</span>
+    );
+  };
+  if (!f) {
+    return (
+      <>
+        <span style={{ background: tile.bg, color: tile.fg }}> </span>
+        {tile.spans.map((s, i) => (
           <span key={i} style={{
             background: s.bg ?? tile.bg, color: s.fg ?? tile.fg,
             fontWeight: s.bold ? 700 : undefined, opacity: s.dim ? 0.62 : undefined,
           }}>{s.text}</span>
-        );
-      })}
-      <span style={{ background: tile.bg, color: tile.fg }}> </span>
+        ))}
+        <span style={{ background: tile.bg, color: tile.fg }}> </span>
+      </>
+    );
+  }
+  return (
+    <>
+      {cell(" ", "padL")}
+      {tile.spans.flatMap((s, i) => [...s.text].map((ch, j) => cell(ch, `${i}-${j}`, s)))}
+      {cell(" ", "padR")}
     </>
   );
 }
@@ -76,12 +96,18 @@ export function Specimen({
   }, [render, columns, phase]);
 
   const anyTiles = render.rows.some((r) => r.tiles.length);
-  const bgGrad = cfg.theme.terminalGradient;
-  const ground = bgGrad
-    ? `linear-gradient(90deg, ${bgGrad.animated
-        ? mix(bgGrad.from, bgGrad.to, Math.abs((phase % 2) - 1))
-        : bgGrad.from}, ${bgGrad.to})`
-    : cfg.theme.terminalBg;
+  // Sampled from the same evaluator the terminal uses, then handed to CSS as
+  // discrete stops -- so a radial or plasma field reads correctly here too.
+  const sheetFill = cfg.theme.terminalFill;
+  const ground = (() => {
+    if (!sheetFill || sheetFill.kind === "none") return cfg.theme.terminalBg;
+    const N = 40, now = phase * 1000;
+    const stops = Array.from({ length: N }, (_, i) => {
+      const c = fillColorAt(sheetFill, i, 0, N, 1, now, "preview");
+      return `${c || cfg.theme.terminalBg} ${(i / (N - 1)) * 100}%`;
+    });
+    return `linear-gradient(90deg, ${stops.join(",")})`;
+  })();
 
   return (
     <div className="specimen-wrap" ref={wrapRef}>

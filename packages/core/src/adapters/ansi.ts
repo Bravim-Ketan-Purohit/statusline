@@ -2,6 +2,7 @@ import type { Span } from "../spans.js";
 import type { Config, TileStyle } from "../schema.js";
 import type { ResolvedTile } from "../layout.js";
 import { displayWidth } from "../width.js";
+import { fillColorAt, type Fill } from "../fill.js";
 
 const RESET = "\x1b[0m";
 
@@ -81,8 +82,10 @@ export interface AnsiOptions {
   pad: number;
   /** columns between tiles */
   gap: number;
-  /** wall clock for animated gradients; defaults to now */
+  /** wall clock for animated fills; defaults to now */
   nowMs?: number;
+  /** session id, so a session-rotated palette is stable */
+  seed?: string;
 }
 
 export function renderTileAnsi(rt: ResolvedTile, cfg: Config, opts: AnsiOptions): string {
@@ -95,12 +98,37 @@ export function renderTileAnsi(rt: ResolvedTile, cfg: Config, opts: AnsiOptions)
   const base = (bg ? sgr(bg, "bg", mode) : "") + (fg ? sgr(fg, "fg", mode) : "");
   let out = base + padStr;
 
+  const fill = rt.style.fill;
+  if (fill && fill.kind !== "none") {
+    // Painted through the shared evaluator, cell by cell, exactly as the web
+    // preview does. One implementation, so the two cannot disagree.
+    const nowMs = opts.nowMs ?? Date.now();
+    const total = rt.spans.reduce((n, s) => n + [...s.text].length, 0) + opts.pad * 2;
+    let i = opts.pad;
+    out = "";
+    for (let k = 0; k < opts.pad; k++) {
+      out += sgr(fillColorAt(fill, k, 0, total, 1, nowMs, opts.seed ?? "") || "#000000", "bg", mode) + " ";
+    }
+    for (const s of rt.spans) {
+      const fgOwn = resolveColor(s.fg, cfg);
+      for (const ch of s.text) {
+        const bg = fillColorAt(fill, i, 0, total, 1, nowMs, opts.seed ?? "");
+        out += (bg ? sgr(bg, "bg", mode) : "")
+             + (fgOwn ? sgr(fgOwn, "fg", mode) : fg ? sgr(fg, "fg", mode) : "")
+             + (s.bold ? "\x1b[1m" : "") + (s.dim ? "\x1b[2m" : "")
+             + (s.link ? osc8(s.link, ch) : ch);
+        i++;
+      }
+    }
+    for (let k = 0; k < opts.pad; k++) {
+      out += sgr(fillColorAt(fill, i + k, 0, total, 1, nowMs, opts.seed ?? "") || "#000000", "bg", mode) + " ";
+    }
+    return out + RESET;
+  }
   if (grad) {
     const from = resolveColor(grad.from, cfg)!;
     const to = resolveColor(grad.to, cfg)!;
     const total = rt.spans.reduce((n, s) => n + [...s.text].length, 0);
-    // An animated gradient shifts its ramp by the phase, so successive renders
-    // show the band in a new position.
     const phase = grad.animated ? gradientPhase(grad.speed, opts.nowMs ?? Date.now()) : 0;
     let i = 0;
     for (const s of rt.spans) {
@@ -136,28 +164,30 @@ export function osc8(url: string, text: string): string {
   return `\x1b]8;;${url}\x1b\\${text}\x1b]8;;\x1b\\`;
 }
 
-export function renderRowAnsi(kept: ResolvedTile[], cfg: Config, opts: AnsiOptions): string {
+export function renderRowAnsi(kept: ResolvedTile[], cfg: Config, opts: AnsiOptions,
+                              rowIndex = 0, rowCount = 1): string {
   const line = kept.map((t) => renderTileAnsi(t, cfg, opts)).join(" ".repeat(opts.gap));
-  const bg = cfg.theme.terminalGradient;
-  if (!bg) return line;
-  return paintGround(line, bg, cfg, opts);
+  const fill = cfg.theme.terminalFill;
+  if (!fill || fill.kind === "none") return line;
+  return paintFill(line, fill, cfg, opts, rowIndex, rowCount);
 }
 
 /**
- * Paint a flowing ground behind the whole row.
+ * Paint a fill behind a row.
  *
- * A terminal has no layer to put a gradient on, so the ground is written as a
+ * The terminal has no layer to put a gradient on, so the field is written as a
  * background colour on every cell that does not already carry a tile's own
- * background. Walking the emitted string means honouring the SGR state we just
- * wrote rather than guessing at it.
+ * background. Walking the emitted string honours the SGR state we just wrote
+ * rather than guessing at it.
+ *
+ * `rowIndex` and `rowCount` are passed through so a two-dimensional mode
+ * (radial, spiral, plasma) actually varies down the bar instead of repeating
+ * the same line.
  */
-function paintGround(line: string, g: NonNullable<Config["theme"]["terminalGradient"]>,
-                     cfg: Config, opts: AnsiOptions): string {
-  const from = resolveColor(g.from, cfg) ?? "#000000";
-  const to = resolveColor(g.to, cfg) ?? "#000000";
+function paintFill(line: string, fill: Fill, cfg: Config, opts: AnsiOptions,
+                   rowIndex: number, rowCount: number): string {
   const mode = cfg.theme.colorMode;
-  const phase = g.animated ? gradientPhase(g.speed, opts.nowMs ?? Date.now()) : 0;
-
+  const nowMs = opts.nowMs ?? Date.now();
   const cells = displayWidth(line);
   if (!cells) return line;
 
@@ -166,9 +196,8 @@ function paintGround(line: string, g: NonNullable<Config["theme"]["terminalGradi
   let hasOwnBg = false;
   let i = 0;
   const groundAt = (c: number) => {
-    const base = cells > 1 ? c / (cells - 1) : 0;
-    const t = g.animated ? Math.abs(((base + phase) % 2) - 1) : base;
-    return sgr(gradientAt(from, to, t), "bg", mode);
+    const hex = fillColorAt(fill, c, rowIndex, cells, Math.max(1, rowCount), nowMs, opts.seed ?? "");
+    return hex ? sgr(hex, "bg", mode) : "";
   };
 
   while (i < line.length) {
@@ -176,7 +205,6 @@ function paintGround(line: string, g: NonNullable<Config["theme"]["terminalGradi
       const m = /^\x1b\[[0-9;:]*m/.exec(line.slice(i));
       if (m) {
         const seq = m[0];
-        // Track whether a tile has set its own background.
         if (/\[0m$/.test(seq)) hasOwnBg = false;
         else if (/4[0-79]|48;/.test(seq)) hasOwnBg = true;
         out += seq;
@@ -193,4 +221,26 @@ function paintGround(line: string, g: NonNullable<Config["theme"]["terminalGradi
     i++;
   }
   return out + RESET;
+}
+
+/**
+ * A standalone fill band, drawn with half-blocks so one text row carries two
+ * pixel rows. This is how a baked image reaches the terminal: U+2580 sets the
+ * foreground to the upper pixel and the background to the lower one.
+ */
+export function renderFillBand(fill: Fill, cols: number, textRows: number,
+                               cfg: Config, nowMs: number, seed = ""): string[] {
+  const mode = cfg.theme.colorMode;
+  const pixelRows = textRows * 2;
+  const lines: string[] = [];
+  for (let r = 0; r < textRows; r++) {
+    let line = "";
+    for (let c = 0; c < cols; c++) {
+      const top = fillColorAt(fill, c, r * 2, cols, pixelRows, nowMs, seed);
+      const bot = fillColorAt(fill, c, r * 2 + 1, cols, pixelRows, nowMs, seed);
+      line += sgr(top || "#000000", "fg", mode) + sgr(bot || "#000000", "bg", mode) + "\u2580";
+    }
+    lines.push(line + RESET);
+  }
+  return lines;
 }
