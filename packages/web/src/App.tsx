@@ -40,7 +40,8 @@ export default function App() {
   // gradient advance together. Only runs when something is actually animated.
   const animating = useMemo(() => {
     if (config.theme.terminalFill?.animated) return true;
-    return config.rows.some((r) => r.tiles.some((t) => t.style.fill?.animated));
+    return config.rows.some((r) => r.tiles.some(
+      (t) => t.style.fill?.animated || t.style.rules?.some((x) => x.blink)));
   }, [config]);
 
   useEffect(() => {
@@ -55,7 +56,12 @@ export default function App() {
     return () => cancelAnimationFrame(raf);
   }, [animating, config.theme.terminalFill?.speed]);
 
-  const data = useMemo(() => sampleData(new Date()), []);
+  // The sample clock advances with the animation phase, so a blink resolves in
+  // the preview exactly as it will in the terminal.
+  const data = useMemo(() => {
+    const d = sampleData(new Date());
+    return animating ? { ...d, local: { ...d.local, now: new Date(phase * 1000) } } : d;
+  }, [animating, phase]);
   const render = useMemo(
     () => renderWeb(config, { ...data, columns }),
     [config, columns, data]
@@ -66,7 +72,7 @@ export default function App() {
   const measured = useMemo(() => {
     for (const row of render.rows)
       for (const t of row.tiles)
-        if (t.tileId === selected) return { width: t.width, ghost: t.ghost };
+        if (t.tileId === selected) return { width: t.width, ghost: t.ghost, fired: t.effect?.fired ?? [] };
     return null;
   }, [render, selected]);
 
@@ -269,7 +275,8 @@ export default function App() {
         {sheetSelected || !selTile
           ? <SheetInspector cfg={config} phase={phase} onChange={setConfig} />
           : <DetailCallout cfg={config} tile={selTile} bpId={bp.id} phase={phase}
-                           measured={measured} onChange={updateTile} onDelete={deleteTile} />}
+                           measured={measured} fired={measured?.fired}
+                           onChange={updateTile} onDelete={deleteTile} />}
       </div>
 
       <footer className="title-block">

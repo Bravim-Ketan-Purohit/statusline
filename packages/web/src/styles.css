@@ -827,3 +827,62 @@ input[type="range"]::-moz-range-thumb {
 }
 .stop-x:hover { color: var(--pen-xs); }
 .stop-add { padding: 2px 7px; font-size: 10px; letter-spacing: 0.08em; }
+
+/* ===== crop dialog ====================================================== */
+
+.cropper-scrim {
+  position: fixed; inset: 0; z-index: 40;
+  background: color-mix(in srgb, var(--ink) 55%, transparent);
+  display: grid; place-items: center;
+  animation: fade 160ms var(--ease);
+}
+@keyframes fade { from { opacity: 0; } }
+.cropper {
+  background: var(--sheet);
+  border: var(--w-edge) solid var(--ink);
+  padding: 0 0 14px;
+  max-width: 92vw;
+  animation: lift 220ms var(--ease);
+}
+@keyframes lift { from { transform: translateY(8px); opacity: 0; } }
+.cropper .region-head { position: static; }
+.cropper-canvas {
+  display: block;
+  margin: 12px auto;
+  border: var(--w-hair) solid var(--rule);
+  cursor: grab;
+  touch-action: none;
+  max-width: 100%;
+}
+.cropper-canvas:active { cursor: grabbing; }
+.cropper-actions {
+  display: flex; gap: 8px; justify-content: flex-end;
+  padding: 6px var(--sheet-pad) 0;
+}
+
+/* ===== conditional rules ================================================ */
+
+.rule {
+  margin: 8px var(--sheet-pad) 0;
+  border: var(--w-hair) solid var(--rule);
+  padding-bottom: 6px;
+  background: color-mix(in srgb, var(--sheet-edge) 26%, transparent);
+}
+.rule .field-row { padding-left: 10px; padding-right: 10px; }
+.rule-head {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 6px 10px;
+  border-bottom: var(--w-hair) solid var(--rule);
+}
+.rule-head select { flex: 1; min-width: 0; }
+.rule-n {
+  font-family: var(--font-data);
+  font-size: 10px;
+  color: var(--dim);
+  font-variant-numeric: tabular-nums;
+}
+/* a rule currently firing is worth seeing at a glance */
+.rule[data-firing="true"] { border-color: var(--pen); }
+.rule[data-firing="true"] .rule-head { background: color-mix(in srgb, var(--pen) 14%, transparent); }

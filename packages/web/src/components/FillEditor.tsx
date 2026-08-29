@@ -1,6 +1,7 @@
 import { useRef, useState } from "react";
 import { FILL_MODES, DEFAULT_FILL, fillColorAt, type Fill, type FillStop } from "@statusline/core";
-import { fillFromFile } from "../lib/imageImport";
+import { fillFromFile, fillFromCanvas, isGifFile, MATRIX_W, MATRIX_H } from "../lib/imageImport";
+import { ImageCropper } from "./ImageCropper";
 import { IconLocked, IconTrash } from "./Icons";
 
 /** A live strip of the fill as the terminal will actually paint it. */
@@ -33,6 +34,7 @@ export function FillEditor({
   const fileRef = useRef<HTMLInputElement>(null);
   const [busy, setBusy] = useState(false);
   const [note, setNote] = useState<string | null>(null);
+  const [pending, setPending] = useState<{ file: File; style: "ramp" | "image" } | null>(null);
 
   const setStop = (i: number, patch: Partial<FillStop>) =>
     set({ stops: f.stops.map((s, j) => (j === i ? { ...s, ...patch } : s)) });
@@ -45,20 +47,43 @@ export function FillEditor({
 
   const onFile = async (file: File | undefined, style: "ramp" | "image") => {
     if (!file) return;
-    setBusy(true); setNote(null);
+    setNote(null);
+    // A GIF is sampled across frames, so there is no single crop to choose.
+    if (isGifFile(file)) {
+      setBusy(true);
+      try {
+        const r = await fillFromFile(file, style, f);
+        onChange(r.fill); setNote(r.note);
+      } catch (e) { setNote(`Could not read that file: ${(e as Error).message}`); }
+      finally { setBusy(false); }
+      return;
+    }
+    setPending({ file, style });
+  };
+
+  const onCropped = async (canvas: HTMLCanvasElement) => {
+    const style = pending?.style ?? "ramp";
+    // Importing an image is itself the decision to have a fill.
+    setPending(null); setBusy(true);
     try {
-      const r = await fillFromFile(file, style, f);
-      onChange(r.fill);
-      setNote(r.note);
-    } catch (e) {
-      setNote(`Could not read that file: ${(e as Error).message}`);
-    } finally { setBusy(false); }
+      const r = await fillFromCanvas(canvas, style, f);
+      onChange(r.fill); setNote(r.note);
+    } catch (e) { setNote(`Could not use that crop: ${(e as Error).message}`); }
+    finally { setBusy(false); }
   };
 
   const twoD = ["radial", "conic", "diamond", "spiral", "ripple", "plasma", "wave"].includes(f.mode);
 
   return (
     <>
+      {pending && (
+        <ImageCropper
+          file={pending.file}
+          aspect={pending.style === "image" ? MATRIX_W / MATRIX_H : 12}
+          onCancel={() => setPending(null)}
+          onConfirm={onCropped}
+        />
+      )}
       <div className="section-rule">Fill</div>
       <div className="field-row">
         <label htmlFor="f-kind">Kind</label>
@@ -160,37 +185,6 @@ export function FillEditor({
             </div>
           )}
 
-          <div className="section-rule">From an image</div>
-          <input ref={fileRef} type="file" accept="image/png,image/jpeg,image/webp,image/gif"
-                 style={{ display: "none" }}
-                 onChange={(e) => { const file = e.target.files?.[0];
-                   onFile(file, (e.target.dataset.style as "ramp" | "image") ?? "ramp");
-                   e.target.value = ""; }} />
-          <div className="field-row">
-            <div className="swatch-row" style={{ gridColumn: "1 / -1" }}>
-              <button className="btn" disabled={busy}
-                      onClick={() => { if (fileRef.current) { fileRef.current.dataset.style = "ramp"; fileRef.current.click(); } }}>
-                {busy ? "reading…" : "Extract ramp"}
-              </button>
-              <button className="btn" disabled={busy}
-                      onClick={() => { if (fileRef.current) { fileRef.current.dataset.style = "image"; fileRef.current.click(); } }}>
-                Bake image
-              </button>
-            </div>
-          </div>
-          {note && <div className="field-row"><div className="cap-note"><span>{note}</span></div></div>}
-          <div className="field-row">
-            <div className="cap-note">
-              <IconLocked size={13} />
-              <span>
-                A terminal row is two pixels tall with half-blocks, so a baked
-                image lands near 96&times;8 — a colour field, not a photograph,
-                and a busy one will fight the text. A GIF becomes a rotating
-                palette rather than playing back: the redraw floor is one second.
-              </span>
-            </div>
-          </div>
-
           {f.rotate && (
             <div className="field-row">
               <label htmlFor="f-rot">Rotate</label>
@@ -211,6 +205,38 @@ export function FillEditor({
           )}
         </>
       )}
+
+      <div className="section-rule">From an image</div>
+      <input ref={fileRef} type="file" accept="image/png,image/jpeg,image/webp,image/gif"
+             style={{ display: "none" }}
+             onChange={(e) => { const file = e.target.files?.[0];
+               onFile(file, (e.target.dataset.style as "ramp" | "image") ?? "ramp");
+               e.target.value = ""; }} />
+      <div className="field-row">
+        <div className="swatch-row" style={{ gridColumn: "1 / -1" }}>
+          <button className="btn" disabled={busy}
+              onClick={() => { if (fileRef.current) { fileRef.current.dataset.style = "ramp"; fileRef.current.click(); } }}>
+            {busy ? "reading…" : "Extract ramp"}
+          </button>
+          <button className="btn" disabled={busy}
+              onClick={() => { if (fileRef.current) { fileRef.current.dataset.style = "image"; fileRef.current.click(); } }}>
+            Bake image
+          </button>
+        </div>
+      </div>
+      {note && <div className="field-row"><div className="cap-note"><span>{note}</span></div></div>}
+      <div className="field-row">
+        <div className="cap-note">
+          <IconLocked size={13} />
+          <span>
+            A terminal row is two pixels tall with half-blocks, so a baked
+            image lands near 96&times;8 — a colour field, not a photograph,
+            and a busy one will fight the text. A GIF becomes a rotating
+            palette rather than playing back: the redraw floor is one second.
+          </span>
+        </div>
+      </div>
+
     </>
   );
 }

@@ -3,6 +3,7 @@ import type { Span, RenderMode } from "./spans.js";
 import { span } from "./spans.js";
 import { displayWidth } from "./width.js";
 import { getTile } from "./tiles/registry.js";
+import { evaluateRules, EDGES, type ResolvedEffect } from "./rules.js";
 import type { RuntimeData } from "./runtime.js";
 
 export interface ResolvedTile {
@@ -12,6 +13,8 @@ export interface ResolvedTile {
   priority: number;
   flex: boolean;
   style: TileStyle;
+  /** rules resolved for this instant */
+  effect: ResolvedEffect;
   /** true when the tile's data was absent and this is a builder placeholder */
   empty?: boolean;
 }
@@ -54,6 +57,8 @@ function decorate(style: TileStyle, value: Span[], mode: RenderMode): Span[] {
 }
 
 export interface BuildOptions {
+  /** wall clock, so a blink resolves identically in every target */
+  nowMs?: number;
   /**
    * Keep tiles whose render produced nothing, flagged `empty`. The terminal
    * never wants this -- a missing field must not draw a box. The builder
@@ -95,15 +100,21 @@ export function buildRow(
     if (empty && !buildOpts.keepEmpty) continue; // missing field -> no box
 
     const style: TileStyle = { ...tile.style, ...ov.style };
+    const effect = evaluateRules(
+      style.rules, data, buildOpts.nowMs ?? (data.local.now ?? new Date()).getTime());
     const shown = empty ? [span(mod.displayName)] : value;
     const spans = decorate(style, shown, mode);
     out.push({
       tile,
       spans,
-      width: spans.reduce((w, s) => w + displayWidth(s.text), 0),
+      // Edge characters occupy real columns, so they must be measured or the
+      // solver will let a bordered row overflow.
+      width: spans.reduce((w, s) => w + displayWidth(s.text), 0)
+           + (EDGES[(effect.border ?? style.border)?.edge ?? "none"][0] ? 2 : 0),
       priority: (tile.responsive as { priority?: number }).priority ?? 5,
       flex: tile.flex,
       style,
+      effect,
       empty,
     });
   }

@@ -3,6 +3,7 @@ import type { Config, TileStyle } from "../schema.js";
 import type { ResolvedTile } from "../layout.js";
 import { displayWidth } from "../width.js";
 import { fillColorAt, type Fill } from "../fill.js";
+import { EDGES, type Border } from "../rules.js";
 
 const RESET = "\x1b[0m";
 
@@ -88,15 +89,47 @@ export interface AnsiOptions {
   seed?: string;
 }
 
+/**
+ * Line borders use SGR: underline (4), overline (53), and the underline-colour
+ * extension (58;2;r;g;b). Underline is universal; overline and coloured
+ * underlines need a modern terminal (Kitty, WezTerm, iTerm2, Ghostty). Where
+ * unsupported the sequence is ignored, so the tile degrades to no line rather
+ * than to garbage. The capability matrix says which is which.
+ */
+function lineSgr(border: Border | undefined, cfg: Config, color: string | undefined): string {
+  if (!border || border.line === "none") return "";
+  let out = "";
+  if (border.line === "under" || border.line === "both") out += "\x1b[4m";
+  if (border.line === "over" || border.line === "both") out += "\x1b[53m";
+  const c = resolveColor(color ?? border.color, cfg);
+  if (c) {
+    const [r, g, b] = hexToRgb(c);
+    out += `\x1b[58;2;${r};${g};${b}m`;
+  }
+  return out;
+}
+const LINE_OFF = "\x1b[24m\x1b[55m\x1b[59m";
+
 export function renderTileAnsi(rt: ResolvedTile, cfg: Config, opts: AnsiOptions): string {
   const mode = cfg.theme.colorMode;
-  const bg = resolveColor(rt.style.bg, cfg);
-  const fg = resolveColor(rt.style.fg, cfg);
+  const eff = rt.effect;
+  // A firing rule overrides the steady style; the blink recolours whichever
+  // target it names, and only while it is in its on phase.
+  const blinkBg = eff?.blinkTarget === "bg" ? eff.blinkColor : undefined;
+  const blinkFg = eff?.blinkTarget === "fg" ? eff.blinkColor : undefined;
+  const bg = resolveColor(blinkBg ?? eff?.bg ?? rt.style.bg, cfg);
+  const fg = resolveColor(blinkFg ?? eff?.fg ?? rt.style.fg, cfg);
+  const border = eff?.border ?? rt.style.border;
+  const borderColor = eff?.blinkTarget === "border" ? eff.blinkColor : undefined;
+  const [edgeL, edgeR] = EDGES[border?.edge ?? "none"];
+  const edgeColor = resolveColor(borderColor ?? border?.color ?? rt.style.bg, cfg);
+  const edgeSgr = edgeColor ? sgr(edgeColor, "fg", mode) : "";
+  const line = lineSgr(border, cfg, borderColor);
   const grad = rt.style.gradient;
   const padStr = " ".repeat(opts.pad);
 
-  const base = (bg ? sgr(bg, "bg", mode) : "") + (fg ? sgr(fg, "fg", mode) : "");
-  let out = base + padStr;
+  const base = (bg ? sgr(bg, "bg", mode) : "") + (fg ? sgr(fg, "fg", mode) : "") + line;
+  let out = (edgeL ? edgeSgr + edgeL + RESET : "") + base + padStr;
 
   const fill = rt.style.fill;
   if (fill && fill.kind !== "none") {
@@ -123,7 +156,8 @@ export function renderTileAnsi(rt: ResolvedTile, cfg: Config, opts: AnsiOptions)
     for (let k = 0; k < opts.pad; k++) {
       out += sgr(fillColorAt(fill, i + k, 0, total, 1, nowMs, opts.seed ?? "") || "#000000", "bg", mode) + " ";
     }
-    return out + RESET;
+    return (edgeL ? edgeSgr + edgeL + RESET : "") + line + out + LINE_OFF + RESET
+         + (edgeR ? edgeSgr + edgeR + RESET : "");
   }
   if (grad) {
     const from = resolveColor(grad.from, cfg)!;
@@ -142,7 +176,7 @@ export function renderTileAnsi(rt: ResolvedTile, cfg: Config, opts: AnsiOptions)
   } else {
     for (const s of rt.spans) out += spanAnsi(s, cfg, base);
   }
-  return out + base + padStr + RESET;
+  return out + base + padStr + LINE_OFF + RESET + (edgeR ? edgeSgr + edgeR + RESET : "");
 }
 
 function spanAnsi(s: Span, cfg: Config, base: string): string {

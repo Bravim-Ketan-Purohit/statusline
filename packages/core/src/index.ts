@@ -1,5 +1,6 @@
 export * from "./schema.js";
 export * from "./fill.js";
+export * from "./rules.js";
 export * from "./spans.js";
 export * from "./runtime.js";
 export * from "./width.js";

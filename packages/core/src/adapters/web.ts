@@ -4,6 +4,7 @@ import type { Span } from "../spans.js";
 import { buildRow, fitRow, resolveBreakpoint, type ResolvedTile } from "../layout.js";
 import { resolveColor, hexToRgb, rgbTo256, rgbTo16 } from "./ansi.js";
 import type { Fill } from "../fill.js";
+import type { Border, ResolvedEffect } from "../rules.js";
 
 /**
  * The web preview must not be a CSS approximation. It runs the SAME layout
@@ -33,6 +34,9 @@ export interface WebTile {
   fg?: string;
   gradient?: { from: string; to: string; animated: boolean; speed: number } | null;
   fill?: Fill;
+  border?: Border;
+  borderColor?: string;
+  effect?: ResolvedEffect;
   /** true when the layout solver dropped it at this width */
   ghost: boolean;
   /** true when the tile has no data and this is a builder placeholder */
@@ -105,8 +109,11 @@ function toWebSpan(s: Span, cfg: Config): WebSpan {
 
 function toWebTile(rt: ResolvedTile, cfg: Config, ghost: boolean, rowIndex: number): WebTile {
   const mode = cfg.theme.colorMode;
-  const bg = resolveColor(rt.style.bg, cfg);
-  const fg = resolveColor(rt.style.fg, cfg);
+  const e = rt.effect;
+  const bg = resolveColor(
+    (e?.blinkTarget === "bg" ? e.blinkColor : undefined) ?? e?.bg ?? rt.style.bg, cfg);
+  const fg = resolveColor(
+    (e?.blinkTarget === "fg" ? e.blinkColor : undefined) ?? e?.fg ?? rt.style.fg, cfg);
   const g = rt.style.gradient;
   return {
     tileId: rt.tile.id,
@@ -126,6 +133,13 @@ function toWebTile(rt: ResolvedTile, cfg: Config, ghost: boolean, rowIndex: numb
         }
       : null,
     fill: rt.style.fill,
+    border: rt.effect?.border ?? rt.style.border,
+    borderColor: (() => {
+      const c = rt.effect?.blinkTarget === "border" ? rt.effect.blinkColor : undefined;
+      const r = resolveColor(c ?? (rt.effect?.border ?? rt.style.border)?.color ?? rt.style.bg, cfg);
+      return r ? quantize(r, mode) : undefined;
+    })(),
+    effect: rt.effect,
     ghost,
     empty: rt.empty ?? false,
   };
@@ -138,7 +152,8 @@ export function renderWeb(cfg: Config, data: RuntimeData): WebRender {
 
   for (let i = 0; i < cfg.rows.length; i++) {
     // keepEmpty: the canvas must show a tile even before it has data.
-    const built = buildRow(cfg, i, data, data.columns, { keepEmpty: true });
+    const built = buildRow(cfg, i, data, data.columns,
+      { keepEmpty: true, nowMs: (data.local.now ?? new Date()).getTime() });
     const { kept, dropped, width } = fitRow(built, data.columns, opts.gap, opts.pad);
     // Preserve authored order, marking dropped tiles as ghosts in place.
     const keptIds = new Set(kept.map((t) => t.tile.id));

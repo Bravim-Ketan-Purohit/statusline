@@ -104,10 +104,29 @@ export interface ImportResult {
   note: string;
 }
 
+/** Build a fill from an already-cropped canvas, skipping the decode step. */
+export async function fillFromCanvas(
+  canvas: HTMLCanvasElement, style: "ramp" | "image", base: Fill
+): Promise<ImportResult> {
+  const bmp = await createImageBitmap(canvas);
+  if (style === "image") {
+    return {
+      fill: { ...base, kind: "image", cells: matrixFromBitmap(bmp), rotate: undefined },
+      note: `Baked your crop to ${MATRIX_W}x${MATRIX_H} cells.`,
+    };
+  }
+  return {
+    fill: { ...base, kind: "gradient", stops: stopsFromBitmap(bmp), cells: undefined, rotate: undefined },
+    note: "Extracted an 8-stop ramp from your crop.",
+  };
+}
+
+export const isGifFile = (file: File) => /gif/i.test(file.type) || /\.gif$/i.test(file.name);
+
 export async function fillFromFile(
   file: File, style: "ramp" | "image", base: Fill
 ): Promise<ImportResult> {
-  const isGif = /gif/i.test(file.type) || /\.gif$/i.test(file.name);
+  const isGif = isGifFile(file);
 
   if (isGif) {
     const { stops, animated } = await framesFromGif(file);

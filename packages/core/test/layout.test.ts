@@ -5,7 +5,8 @@ import type { ResolvedTile } from "../src/layout.js";
 import type { Breakpoint, Tile } from "../src/schema.js";
 
 const t = (id: string, width: number, priority: number): ResolvedTile =>
-  ({ tile: { id } as Tile, spans: [], width, priority, flex: false, style: {} as any });
+  ({ tile: { id } as Tile, spans: [], width, priority, flex: false, style: {} as any,
+    effect: { fired: [] } });
 
 const BPS: Breakpoint[] = [
   { id: "xs", minCols: 0 }, { id: "sm", minCols: 40 },

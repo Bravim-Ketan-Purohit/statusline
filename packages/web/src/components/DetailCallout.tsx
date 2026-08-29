@@ -2,6 +2,7 @@ import type { Config, Tile } from "@statusline/core";
 import { getTile } from "@statusline/core";
 import { IconLocked, IconTrash } from "./Icons";
 import { FillEditor } from "./FillEditor";
+import { RulesEditor } from "./RulesEditor";
 
 /**
  * Detail callout. Cut faces: the tile's measured internals are exposed, not
@@ -12,12 +13,13 @@ import { FillEditor } from "./FillEditor";
 type Tri = "inherit" | "on" | "off";
 
 export function DetailCallout({
-  cfg, tile, bpId, phase, measured, onChange, onDelete,
+  cfg, tile, bpId, phase, measured, fired, onChange, onDelete,
 }: {
   cfg: Config;
   tile: Tile | null;
   bpId: string;
   phase: number;
+  fired?: string[];
   measured: { width: number; ghost: boolean } | null;
   onChange: (next: Tile) => void;
   onDelete: () => void;
@@ -60,6 +62,13 @@ export function DetailCallout({
         <span className="n">{measured ? `${measured.width} col` : "not drawn"}</span>
       </h2>
       <div className="callout-body">
+        {fired?.length ? (
+          <div className="field-row">
+            <div className="cap-note" style={{ color: "var(--pen)" }}>
+              <span>Firing now: {fired.join(", ")}</span>
+            </div>
+          </div>
+        ) : null}
         {measured?.ghost && (
           <div className="field-row"><div className="cap-note" style={{ color: "var(--pen-xs)" }}>
             <IconLocked size={13} />
@@ -104,6 +113,14 @@ export function DetailCallout({
       <div className="callout-body" style={{ paddingTop: 0 }}>
         <FillEditor fill={tile.style.fill} phase={phase} scope="tile"
                     onChange={(f) => setStyle({ fill: f })} />
+
+        <RulesEditor
+          border={tile.style.border}
+          rules={tile.style.rules}
+          nerdFont={cfg.theme.font.nerdFont}
+          onBorder={(b) => setStyle({ border: b })}
+          onRules={(r) => setStyle({ rules: r })}
+        />
 
         <div className="section-rule">Layer {bpId}</div>
         <div className="field-row">

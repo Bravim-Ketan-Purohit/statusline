@@ -51,12 +51,46 @@ export const GradientSchema = z.object({
   speed: z.number().min(0.01).max(4).default(0.25),
 });
 
+export const BorderSchema = z.object({
+  edge: z.enum(["none", "thin", "block", "bracket", "round", "angle", "powerline"]).default("none"),
+  line: z.enum(["none", "under", "over", "both"]).default("none"),
+  color: ColorRef.optional(),
+});
+
+export const BlinkSchema = z.object({
+  target: z.enum(["border", "bg", "fg"]).default("border"),
+  color: ColorRef,
+  /** The terminal's redraw rate is the real ceiling; see the capability note. */
+  hz: z.number().min(0.05).max(4).default(0.5),
+});
+
+export const SignalSchema = z.enum([
+  "ci.failing", "ci.passing", "ci.running",
+  "pr.approved", "pr.changes", "pr.pending", "pr.open",
+  "context.above", "fivehour.above", "sevenday.above",
+  "git.conflict", "git.dirty", "git.ahead", "git.behind", "git.clean",
+  "cost.above", "battery.below", "review.waiting", "always",
+]);
+
+export const RuleSchema = z.object({
+  signal: SignalSchema,
+  threshold: z.number().optional(),
+  fg: ColorRef.optional(),
+  bg: ColorRef.optional(),
+  border: BorderSchema.optional(),
+  blink: BlinkSchema.optional(),
+});
+
 export const TileStyleSchema = z.object({
   bg: ColorRef.optional(),
   fg: ColorRef.optional(),
   gradient: GradientSchema.nullable().default(null),
   /** Richer than `gradient`: modes, multi-stop ramps, baked images. */
   fill: FillSchema.optional(),
+  /** Steady border. Rules may override it while they fire. */
+  border: BorderSchema.optional(),
+  /** Conditional styling; later rules win. */
+  rules: z.array(RuleSchema).max(12).optional(),
   glyph: z.string().default(""),
   label: z.string().default(""),
   labelDim: z.boolean().default(true),
