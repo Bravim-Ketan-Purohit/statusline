@@ -26,6 +26,8 @@ export default function App() {
   const [selected, setSelected] = useState<string | null>(null);
   const [sheetSelected, setSheetSelected] = useState(false);
   const [drop, setDrop] = useState<DropTarget | null>(null);
+  // `dragging` is already the width-handle ref; this one is the tile in flight.
+  const [dragTile, setDragTile] = useState<string | null>(null);
   const [phase, setPhase] = useState(0);
   const [safety, setSafety] = useState(true);
   const [toast, setToast] = useState<string | null>(null);
@@ -94,6 +96,29 @@ export default function App() {
     return tile.id;
   }, [setConfig]);
 
+  /**
+   * Move a tile that already exists. Removing it first shifts every later
+   * index in that row, so the target is corrected before the insert -- without
+   * that, dragging a tile rightwards inside one row lands it one slot short.
+   */
+  const moveTile = useCallback((id: string, at: DropTarget) => {
+    setConfig((c) => {
+      const rows = c.rows.map((r) => ({ ...r, tiles: [...r.tiles] }));
+      let from = -1, fromRow = -1;
+      rows.forEach((r, ri) => {
+        const i = r.tiles.findIndex((t) => t.id === id);
+        if (i !== -1) { from = i; fromRow = ri; }
+      });
+      if (from === -1) return c;
+      const [tile] = rows[fromRow]!.tiles.splice(from, 1);
+      const ri = Math.min(Math.max(at.row, 0), rows.length - 1);
+      let idx = at.index;
+      if (ri === fromRow && idx > from) idx -= 1;
+      rows[ri]!.tiles.splice(Math.min(Math.max(idx, 0), rows[ri]!.tiles.length), 0, tile!);
+      return { ...c, rows };
+    });
+  }, [setConfig]);
+
   const updateTile = useCallback((next: Tile) => {
     setConfig((c) => ({
       ...c,
@@ -106,6 +131,31 @@ export default function App() {
     setConfig((c) => ({ ...c, rows: c.rows.map((r) => ({ ...r, tiles: r.tiles.filter((t) => t.id !== selected) })) }));
     setSelected(null);
   }, [selected, setConfig]);
+
+  const addRow = useCallback(() => {
+    setConfig((c) => {
+      if (c.rows.length >= c.targets.claudeCode.maxRows) {
+        say(`This target renders at most ${c.targets.claudeCode.maxRows} rows.`);
+        return c;
+      }
+      return { ...c, rows: [...c.rows, { id: `row-${Date.now().toString(36)}`, tiles: [] }] };
+    });
+  }, [setConfig]);
+
+  const removeRow = useCallback((idx: number) => {
+    setConfig((c) => (c.rows.length <= 1 ? c : { ...c, rows: c.rows.filter((_, i) => i !== idx) }));
+    setSelected(null);
+  }, [setConfig]);
+
+  const moveRow = useCallback((idx: number, dir: -1 | 1) => {
+    setConfig((c) => {
+      const j = idx + dir;
+      if (j < 0 || j >= c.rows.length) return c;
+      const rows = [...c.rows];
+      [rows[idx], rows[j]] = [rows[j]!, rows[idx]!];
+      return { ...c, rows };
+    });
+  }, [setConfig]);
 
   const onBundle = useCallback((b: Bundle) => {
     setConfig((c) => applyBundle(c, b, safety));
@@ -225,7 +275,11 @@ export default function App() {
           }}
           onDragOver={(e) => {
             e.preventDefault();
-            e.dataTransfer.dropEffect = "copy";
+            // The dropEffect must agree with the dragstart's effectAllowed, or
+            // Chromium rejects the drop silently: a move dragged onto a "copy"
+            // target simply never fires onDrop.
+            const isMove = e.dataTransfer.types.includes("text/tile-id");
+            e.dataTransfer.dropEffect = isMove ? "move" : "copy";
             setDrop(slotAt(e.clientX, e.clientY));
           }}
           onDragLeave={(e) => {
@@ -233,9 +287,11 @@ export default function App() {
           }}
           onDrop={(e) => {
             e.preventDefault();
+            const moveId = e.dataTransfer.getData("text/tile-id");
             const type = e.dataTransfer.getData("text/tile-type") || e.dataTransfer.getData("text/plain");
             const at = slotAt(e.clientX, e.clientY);
-            setDrop(null);
+            setDrop(null); setDragTile(null);
+            if (moveId && at) { moveTile(moveId, at); say("Moved."); return; }
             if (!type) return;
             addTile(type, at ?? undefined);
             say(`Added ${type}.`);
@@ -250,8 +306,22 @@ export default function App() {
                 onSelect={(id) => { setSelected(id); setSheetSelected(false); }}
                 onSelectSheet={() => { setSelected(null); setSheetSelected(true); }}
                 onDropAt={setDrop}
+                dragging={dragTile}
+                onDragTile={setDragTile}
               />
             </div>
+          </div>
+          <div className="row-tools">
+            {config.rows.map((r, i) => (
+              <span className="row-tool" key={r.id}>
+                <span className="rt-n">row {i + 1}</span>
+                <button onClick={() => moveRow(i, -1)} disabled={i === 0} aria-label={`Move row ${i + 1} up`}>↑</button>
+                <button onClick={() => moveRow(i, 1)} disabled={i === config.rows.length - 1} aria-label={`Move row ${i + 1} down`}>↓</button>
+                <button onClick={() => removeRow(i)} disabled={config.rows.length <= 1} aria-label={`Remove row ${i + 1}`}>×</button>
+              </span>
+            ))}
+            <button className="btn" onClick={addRow}
+                    disabled={config.rows.length >= config.targets.claudeCode.maxRows}>+ row</button>
           </div>
           <Schedule cfg={config} data={data} activeId={bp.id}
                     onPick={(c) => setPx(Math.max(MIN_PX, Math.round(c * cell)))} />

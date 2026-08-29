@@ -69,6 +69,7 @@ function TileSpans({ tile, phase }: { tile: WebTile; phase: number }) {
 
 export function Specimen({
   render, cfg, selected, onSelect, onSelectSheet, columns, phase, drop, onDropAt,
+  dragging, onDragTile,
 }: {
   render: WebRender;
   cfg: Config;
@@ -79,6 +80,8 @@ export function Specimen({
   phase: number;
   drop: DropTarget | null;
   onDropAt: (t: DropTarget | null) => void;
+  dragging?: string | null;
+  onDragTile?: (id: string | null) => void;
 }) {
   const wrapRef = useRef<HTMLDivElement>(null);
   const [marks, setMarks] = useState<number[]>([]);
@@ -140,6 +143,15 @@ export function Specimen({
                 {drop && drop.row === ri && drop.index === i && <i className="drop-caret" aria-hidden="true" />}
                 <span
                   data-tile
+                  data-tileid={t.tileId}
+                  draggable
+                  onDragStart={(e) => {
+                    e.dataTransfer.setData("text/tile-id", t.tileId);
+                    e.dataTransfer.effectAllowed = "move";
+                    onDragTile?.(t.tileId);
+                  }}
+                  onDragEnd={() => onDragTile?.(null)}
+                  data-dragging={dragging === t.tileId}
                   data-ghost={t.ghost}
                   data-empty={t.empty}
                   data-selected={selected === t.tileId}

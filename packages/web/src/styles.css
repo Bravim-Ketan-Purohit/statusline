@@ -266,7 +266,7 @@ input[type="checkbox"]:checked::after {
   position: relative;
   background: var(--sheet-deep);
   display: grid;
-  grid-template-rows: auto auto auto minmax(0, 1fr);
+  grid-template-rows: auto auto auto auto minmax(0, 1fr);
   min-width: 0;
   min-height: 0;
   overflow: hidden;
@@ -373,7 +373,7 @@ input[type="checkbox"]:checked::after {
 
 /* --- width drag handle: the primary action ---------------------------- */
 .handle {
-  grid-row: 3;
+  grid-row: 4;
   margin: 0 40px 18px;
   height: 34px;
   display: flex;
@@ -608,7 +608,7 @@ input[type="checkbox"]:checked::after {
 /* ===== drawing schedule ================================================= */
 
 .schedule {
-  grid-row: 2;
+  grid-row: 3;
   margin: 4px 40px 0;
   max-width: 520px;
   overflow-x: auto;
@@ -886,3 +886,28 @@ input[type="range"]::-moz-range-thumb {
 /* a rule currently firing is worth seeing at a glance */
 .rule[data-firing="true"] { border-color: var(--pen); }
 .rule[data-firing="true"] .rule-head { background: color-mix(in srgb, var(--pen) 14%, transparent); }
+
+/* ===== row tools ======================================================== */
+
+.row-tools{
+  grid-row:2; display:flex; flex-wrap:wrap; gap:8px; align-items:center;
+  margin:6px 40px 0; font-family:var(--font-data); font-size:10px;
+}
+.row-tool{
+  display:inline-flex; align-items:center; gap:2px;
+  border:var(--w-hair) solid var(--rule); padding:1px 2px 1px 6px;
+}
+.rt-n{ color:var(--dim); letter-spacing:.04em; margin-right:3px; }
+.row-tool button{
+  border:0; background:transparent; color:var(--ink-2); cursor:pointer;
+  padding:1px 5px; font-size:11px; line-height:1;
+}
+.row-tool button:hover:not(:disabled){ background:var(--pen); color:#fff; }
+.row-tool button:disabled{ color:var(--rule); cursor:not-allowed; }
+
+/* a tile in flight reads as lifted, not lost */
+.spec-tile[data-dragging="true"]{ opacity:.4; }
+.spec-tile[draggable="true"]{ cursor:grab; }
+.spec-tile[draggable="true"]:active{ cursor:grabbing; }
+
+@media (max-width:1080px){ .row-tools{ margin:6px 20px 0; } }

@@ -88,10 +88,10 @@ Sizes are rough: **S** < 1h · **M** 1–4h · **L** 4–12h · **XL** multi-day
 
 ### 2.0 DECISION REQUIRED (blocks everything below)
 
-- [ ] **2.0.1** Choose the sampling architecture:
+- [x] **2.0.1** Choose the sampling architecture:
   - **(a) Daemon sampler** — accurate fixed interval, but another process to run and supervise
   - **(b) Renderer-side prev-sample diff** — no daemon, but the interval becomes "however often the bar happened to redraw", which is irregular
-  - Spec prefers (a). Recommendation: (a), reusing the existing daemon.
+  - Spec prefers (a). **Chosen: (a)**, reusing the existing daemon.
 - [ ] **2.0.2** Record the choice in `DESIGN.md` and in a comment at the top of `cli/src/metrics.ts`
 
 ### 2.1 Sampler (assuming 2.0 → daemon)
@@ -192,26 +192,26 @@ Sizes are rough: **S** < 1h · **M** 1–4h · **L** 4–12h · **XL** multi-day
 
 ### 4.1 Drag to reorder inside the canvas
 
-- [ ] **4.1.1** Make `.spec-tile` draggable with `draggable` + `onDragStart` carrying `text/tile-id`
-- [ ] **4.1.2** Reuse the existing `slotAt()` for the drop target
-- [ ] **4.1.3** `moveTile(id, target)` in `App.tsx` — splice out, splice in, preserving the tile object
-  - [ ] **4.1.3.1** Handle same-row moves where removal shifts the target index
-- [ ] **4.1.4** Distinguish a palette drop (`text/tile-type`) from a reorder (`text/tile-id`) in the drop handler
-- [ ] **4.1.5** Dim the dragged tile at 40% while it is in flight
-- [ ] **4.1.6** Test with Playwright: drag tile 1 to position 3, assert config order
+- [x] **4.1.1** Make `.spec-tile` draggable with `draggable` + `onDragStart` carrying `text/tile-id`
+- [x] **4.1.2** Reuse the existing `slotAt()` for the drop target
+- [x] **4.1.3** `moveTile(id, target)` in `App.tsx` — splice out, splice in, preserving the tile object
+  - [x] **4.1.3.1** Handle same-row moves where removal shifts the target index
+- [x] **4.1.4** Distinguish a palette drop (`text/tile-type`) from a reorder (`text/tile-id`) in the drop handler
+- [x] **4.1.5** Dim the dragged tile at 40% while it is in flight
+- [x] **4.1.6** Test with Playwright: drag tile 1 to position 3, assert config order
 
 ### 4.2 Drag between rows
 
-- [ ] **4.2.1** Already implied by `slotAt()` returning `{row, index}` — verify it works across rows
-- [ ] **4.2.2** Highlight the target row while hovering it
-- [ ] **4.2.3** Test: drag from row 1 to row 3
+- [x] **4.2.1** Already implied by `slotAt()` returning `{row, index}` — verify it works across rows
+- [x] **4.2.2** Highlight the target row while hovering it
+- [x] **4.2.3** Test: drag from row 1 to row 3
 
 ### 4.3 Row management
 
-- [ ] **4.3.1** "+ row" button under the drawing
-- [ ] **4.3.2** Remove-row control on each row, disabled when it is the last one
-- [ ] **4.3.3** Reorder rows (up/down buttons are enough; do not build row dragging)
-- [ ] **4.3.4** Respect `targets.claudeCode.maxRows` — warn past it rather than silently truncating
+- [x] **4.3.1** "+ row" button under the drawing
+- [x] **4.3.2** Remove-row control on each row, disabled when it is the last one
+- [x] **4.3.3** Reorder rows (up/down buttons are enough; do not build row dragging)
+- [x] **4.3.4** Respect `targets.claudeCode.maxRows` — warn past it rather than silently truncating
 
 ### 4.4 Systematic capability matrix
 
