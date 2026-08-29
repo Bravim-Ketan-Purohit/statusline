@@ -93,6 +93,18 @@ export interface SystemInfo {
 /** Now-playing, from playerctl or AppleScript. */
 export interface MediaInfo { title?: string; artist?: string; playing?: boolean }
 
+/** Sampled OS metrics, written by the daemon and read by the renderer. */
+export interface Metrics {
+  cpuPct?: number;
+  memUsed?: number; memTotal?: number;
+  swapUsed?: number; swapTotal?: number;
+  diskPct?: number;
+  load1?: number;
+  netRx?: number; netTx?: number;
+  gpuPct?: number; vramUsed?: number; vramTotal?: number;
+  at: number;
+}
+
 export interface RuntimeData {
   cc: ClaudeStdin;
   local: LocalData;
@@ -104,6 +116,7 @@ export interface RuntimeData {
   personal?: PersonalInfo;
   system?: SystemInfo;
   media?: MediaInfo;
+  metrics?: Metrics;
   /** Output of user-configured custom commands, keyed by tile id. */
   custom?: Record<string, string>;
 }

@@ -18,7 +18,10 @@ export type SignalId =
   | "pr.approved" | "pr.changes" | "pr.pending" | "pr.open"
   | "context.above" | "fivehour.above" | "sevenday.above"
   | "git.conflict" | "git.dirty" | "git.ahead" | "git.behind" | "git.clean"
-  | "cost.above" | "battery.below" | "review.waiting" | "always";
+  | "cost.above" | "battery.below" | "review.waiting"
+  | "cpu.above" | "mem.above" | "swap.above" | "disk.above"
+  | "load.above" | "gpu.above" | "vram.above"
+  | "always";
 
 export interface SignalDef {
   id: SignalId;
@@ -55,6 +58,20 @@ export const SIGNALS: SignalDef[] = [
   { id: "battery.below",  name: "Battery below",  note: "Battery drops under this percentage, unplugged.",
     threshold: { label: "%", min: 1, max: 100, step: 1, def: 20 } },
   { id: "review.waiting", name: "Reviews waiting",note: "Pull requests are awaiting your review." },
+  { id: "cpu.above",  name: "CPU above",   note: "Sampled CPU crosses this percentage.",
+    threshold: { label: "%", min: 1, max: 100, step: 1, def: 85 } },
+  { id: "mem.above",  name: "Memory above",note: "Memory in use crosses this percentage of total.",
+    threshold: { label: "%", min: 1, max: 100, step: 1, def: 85 } },
+  { id: "swap.above", name: "Swap above",  note: "Swap in use crosses this many megabytes.",
+    threshold: { label: "MB", min: 1, max: 65536, step: 64, def: 512 } },
+  { id: "disk.above", name: "Disk above",  note: "Disk used crosses this percentage.",
+    threshold: { label: "%", min: 1, max: 100, step: 1, def: 90 } },
+  { id: "load.above", name: "Load above",  note: "One-minute load average crosses this value.",
+    threshold: { label: "load", min: 1, max: 64, step: 1, def: 8 } },
+  { id: "gpu.above",  name: "GPU above",   note: "GPU utilisation crosses this percentage.",
+    threshold: { label: "%", min: 1, max: 100, step: 1, def: 90 } },
+  { id: "vram.above", name: "VRAM above",  note: "VRAM in use crosses this percentage of total.",
+    threshold: { label: "%", min: 1, max: 100, step: 1, def: 90 } },
   { id: "always",         name: "Always",         note: "Unconditional; useful for a steady accent." },
 ];
 
@@ -94,6 +111,21 @@ export function signalActive(sig: SignalId, threshold: number | undefined, d: Ru
       return !!b && !b.charging && b.percent <= t;
     }
     case "review.waiting": return n(d.gh?.review) > 0;
+    // Metrics are absent when the sampler is not running or its file is stale.
+    // Absent must never fire a threshold: a silent alarm beats a false one.
+    case "cpu.above":  return d.metrics?.cpuPct !== undefined && d.metrics.cpuPct >= t;
+    case "disk.above": return d.metrics?.diskPct !== undefined && d.metrics.diskPct >= t;
+    case "load.above": return d.metrics?.load1 !== undefined && d.metrics.load1 >= t;
+    case "gpu.above":  return d.metrics?.gpuPct !== undefined && d.metrics.gpuPct >= t;
+    case "swap.above": return d.metrics?.swapUsed !== undefined && d.metrics.swapUsed >= t * 1024 * 1024;
+    case "mem.above": {
+      const m = d.metrics;
+      return m?.memUsed !== undefined && !!m.memTotal && (m.memUsed / m.memTotal) * 100 >= t;
+    }
+    case "vram.above": {
+      const m = d.metrics;
+      return m?.vramUsed !== undefined && !!m.vramTotal && (m.vramUsed / m.vramTotal) * 100 >= t;
+    }
     default: return false;
   }
 }

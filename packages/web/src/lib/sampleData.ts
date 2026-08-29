@@ -75,5 +75,10 @@ export function sampleData(now: Date): Omit<RuntimeData, "columns"> {
       __protected: JSON.stringify(["main", "master", "release"]),
     },
     media: { title: "Sandese Aate Hai", artist: "Sonu Nigam", playing: true },
+    metrics: {
+      at: now.getTime(), cpuPct: 34, memUsed: 12.4e9, memTotal: 32e9,
+      swapUsed: 1.2e9, swapTotal: 8e9, diskPct: 82, load1: 2.4,
+      netRx: 2.1e6, netTx: 340e3, gpuPct: 71, vramUsed: 7.2e9, vramTotal: 24e9,
+    },
   };
 }

@@ -92,56 +92,56 @@ Sizes are rough: **S** < 1h · **M** 1–4h · **L** 4–12h · **XL** multi-day
   - **(a) Daemon sampler** — accurate fixed interval, but another process to run and supervise
   - **(b) Renderer-side prev-sample diff** — no daemon, but the interval becomes "however often the bar happened to redraw", which is irregular
   - Spec prefers (a). **Chosen: (a)**, reusing the existing daemon.
-- [ ] **2.0.2** Record the choice in `DESIGN.md` and in a comment at the top of `cli/src/metrics.ts`
+- [x] **2.0.2** Record the choice in `DESIGN.md` and in a comment at the top of `cli/src/metrics.ts`
 
 ### 2.1 Sampler (assuming 2.0 → daemon)
 
-- [ ] **2.1.1** Create `cli/src/metrics.ts`
-- [ ] **2.1.2** Define `Metrics` type: `{ cpuPct, memUsed, memTotal, swapUsed, diskPct, load1, netRx, netTx, gpuPct, vramUsed, vramTotal, at }`
-- [ ] **2.1.3** Linux readers
+- [x] **2.1.1** Create `cli/src/metrics.ts`
+- [x] **2.1.2** Define `Metrics` type: `{ cpuPct, memUsed, memTotal, swapUsed, diskPct, load1, netRx, netTx, gpuPct, vramUsed, vramTotal, at }`
+- [ ] **2.1.3** Linux readers — written, untestable on this machine
   - [ ] **2.1.3.1** `/proc/stat` → cpu delta between two samples
   - [ ] **2.1.3.2** `/proc/meminfo` → MemTotal, MemAvailable, SwapTotal, SwapFree
   - [ ] **2.1.3.3** `/proc/net/dev` → rx/tx byte delta, summed across non-loopback interfaces
   - [ ] **2.1.3.4** `os.loadavg()` for load
   - [ ] **2.1.3.5** `statvfs` equivalent via `fs.statfsSync` for disk
-- [ ] **2.1.4** macOS readers
-  - [ ] **2.1.4.1** `host_statistics` is not reachable from node — use `top -l 1 -n 0` or `vm_stat`, parse defensively
-  - [ ] **2.1.4.2** `netstat -ib` for network counters
-  - [ ] **2.1.4.3** Document that macOS CPU sampling is coarser than Linux
-- [ ] **2.1.5** GPU
-  - [ ] **2.1.5.1** `nvidia-smi --query-gpu=utilization.gpu,memory.used,memory.total --format=csv,noheader`
-  - [ ] **2.1.5.2** 100–300ms cold — never on the render path, daemon only
-  - [ ] **2.1.5.3** macOS has no unprivileged GPU API; `powermetrics` needs sudo. **Detect and hide, do not show a broken tile**
-- [ ] **2.1.6** Sampler loop in `cli/src/daemon.ts`
-  - [ ] **2.1.6.1** `setInterval` at 2s, configurable via `daemon.sampleIntervalMs`
-  - [ ] **2.1.6.2** Keep the previous sample in memory for deltas
-  - [ ] **2.1.6.3** Write to `CACHE_DIR/metrics.json` atomically (tmp + rename)
-  - [ ] **2.1.6.4** `unref()` the timer so the daemon can still exit
-- [ ] **2.1.7** Fallback when no daemon is running
-  - [ ] **2.1.7.1** Renderer reads `metrics.json`; if it is older than 30s, show nothing rather than stale numbers
-  - [ ] **2.1.7.2** One-line hint in `statusline doctor` (see 10.3) telling the user to start the daemon
+- [x] **2.1.4** macOS readers
+  - [x] **2.1.4.1** `host_statistics` is not reachable from node — use `top -l 1 -n 0` or `vm_stat`, parse defensively
+  - [x] **2.1.4.2** `netstat -ib` for network counters
+  - [x] **2.1.4.3** Document that macOS CPU sampling is coarser than Linux
+- [x] **2.1.5** GPU
+  - [x] **2.1.5.1** `nvidia-smi --query-gpu=utilization.gpu,memory.used,memory.total --format=csv,noheader`
+  - [x] **2.1.5.2** 100–300ms cold — never on the render path, daemon only
+  - [x] **2.1.5.3** macOS has no unprivileged GPU API; `powermetrics` needs sudo. **Detect and hide, do not show a broken tile**
+- [x] **2.1.6** Sampler loop in `cli/src/daemon.ts`
+  - [x] **2.1.6.1** `setInterval` at 2s, configurable via `daemon.sampleIntervalMs`
+  - [x] **2.1.6.2** Keep the previous sample in memory for deltas
+  - [x] **2.1.6.3** Write to `CACHE_DIR/metrics.json` atomically (tmp + rename)
+  - [x] **2.1.6.4** `unref()` the timer so the daemon can still exit
+- [x] **2.1.7** Fallback when no daemon is running
+  - [x] **2.1.7.1** Renderer reads `metrics.json`; if it is older than 30s, show nothing rather than stale numbers
+  - [x] **2.1.7.2** One-line hint in `statusline doctor` (see 10.3) telling the user to start the daemon
 
 ### 2.2 Metric tiles
 
-- [ ] **2.2.1** Add `metrics?: Metrics` to `RuntimeData`
-- [ ] **2.2.2** Create `core/src/tiles/system.ts`
-- [ ] **2.2.3** `cpuTile` — bar + percentage, reuse `renderBar`
-- [ ] **2.2.4** `memoryTile` — `12/32G`, humanized
-- [ ] **2.2.5** `swapTile` — hidden at zero
-- [ ] **2.2.6** `diskTile` — percentage of the repo's mount
-- [ ] **2.2.7** `loadTile` — 1-minute average
-- [ ] **2.2.8** `networkTile` — `↓2.1M ↑340k`, rate not total
-- [ ] **2.2.9** `gpuTile` + `vramTile` — capability `needsGpu`, hidden when absent
-- [ ] **2.2.10** Every tile returns `[]` when `metrics` is missing or stale
-- [ ] **2.2.11** Register all; add to `sampleData.ts`
+- [x] **2.2.1** Add `metrics?: Metrics` to `RuntimeData`
+- [x] **2.2.2** Create `core/src/tiles/system.ts`
+- [x] **2.2.3** `cpuTile` — bar + percentage, reuse `renderBar`
+- [x] **2.2.4** `memoryTile` — `12/32G`, humanized
+- [x] **2.2.5** `swapTile` — hidden at zero
+- [x] **2.2.6** `diskTile` — percentage of the repo's mount
+- [x] **2.2.7** `loadTile` — 1-minute average
+- [x] **2.2.8** `networkTile` — `↓2.1M ↑340k`, rate not total
+- [x] **2.2.9** `gpuTile` + `vramTile` — capability `needsGpu`, hidden when absent
+- [x] **2.2.10** Every tile returns `[]` when `metrics` is missing or stale
+- [x] **2.2.11** Register all; add to `sampleData.ts`
 
 ### 2.3 New signals for the rules engine
 
-- [ ] **2.3.1** Add to `SignalId` in `core/src/rules.ts`: `cpu.above`, `mem.above`, `swap.above`, `disk.above`, `load.above`, `gpu.above`, `vram.above`
-- [ ] **2.3.2** Add `SignalDef` entries with thresholds and notes
-- [ ] **2.3.3** Implement each branch in `signalActive()`
-- [ ] **2.3.4** Extend `SignalSchema` enum in `schema.ts` to match
-- [ ] **2.3.5** Test: each fires above its threshold and not below; missing metrics never fire
+- [x] **2.3.1** Add to `SignalId` in `core/src/rules.ts`: `cpu.above`, `mem.above`, `swap.above`, `disk.above`, `load.above`, `gpu.above`, `vram.above`
+- [x] **2.3.2** Add `SignalDef` entries with thresholds and notes
+- [x] **2.3.3** Implement each branch in `signalActive()`
+- [x] **2.3.4** Extend `SignalSchema` enum in `schema.ts` to match
+- [x] **2.3.5** Test: each fires above its threshold and not below; missing metrics never fire
 
 ---
 

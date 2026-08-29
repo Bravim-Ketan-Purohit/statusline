@@ -3,6 +3,7 @@ import { randomBytes, timingSafeEqual } from "node:crypto";
 import { readFileSync, writeFileSync, mkdirSync, existsSync } from "node:fs";
 import { CONFIG_DIR, DAEMON_PATH } from "./paths.js";
 import { dispatch, isAction, backend, ACTIONS } from "./actions.js";
+import { sample, writeMetrics } from "./metrics.js";
 
 /**
  * This exists only because Claude Code cannot dispatch a command: its status
@@ -36,8 +37,19 @@ export function actionUrl(port: number, token: string, id: string): string {
   return `http://127.0.0.1:${port}/action/${encodeURIComponent(id)}?t=${token}`;
 }
 
-export function startDaemon(port: number): Promise<void> {
+export function startDaemon(port: number, sampleMs = 2000): Promise<void> {
   const { token } = loadOrCreateToken(port);
+
+  /**
+   * The sampler. CPU and network are cumulative counters, so a percentage
+   * needs two reads a known interval apart -- which is exactly what the
+   * renderer cannot provide, since it runs whenever a message happens to
+   * arrive. Hence the daemon.
+   */
+  const tick = () => { try { writeMetrics(sample()); } catch { /* keep going */ } };
+  tick();
+  const timer = setInterval(tick, Math.max(500, sampleMs));
+  timer.unref();   // the sampler must never be the reason the process lives
   const server = createServer((req, res) => {
     const end = (code: number, body = "") => {
       res.writeHead(code, { "content-type": "text/plain", "cache-control": "no-store" });
@@ -73,6 +85,7 @@ export function startDaemon(port: number): Promise<void> {
       process.stderr.write(`  token stored 0600 at ${DAEMON_PATH}\n`);
       process.stderr.write(`  media backend: ${b ?? "none detected — media actions will 500"}\n`);
       process.stderr.write(`  allowlist: ${ACTIONS.join(", ")}\n`);
+      process.stderr.write(`  sampling metrics every ${Math.max(500, sampleMs)}ms\n`);
       resolve();
     });
   });

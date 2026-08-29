@@ -15,6 +15,7 @@ import {
 } from "./git.js";
 import { venvTile, nodeVersionTile, pythonVersionTile, hostnameTile, batteryTile } from "./env.js";
 import { kubeContextTile, awsProfileTile, gcpProjectTile, protectedBranchTile } from "./safety.js";
+import { cpuTile, memoryTile, swapTile, diskTile, loadTile, networkTile, gpuTile, vramTile } from "./system.js";
 import { verseTile, trackTile, skillsTile } from "./personal.js";
 import { playPauseTile, nextTile, prevTile, volUpTile, volDownTile, nowPlayingTile } from "./media.js";
 import { textTile, spacerTile, separatorTile, commandTile } from "./layout.js";
@@ -38,6 +39,8 @@ const MODULES: TileModule<any>[] = [
   hostnameTile, batteryTile,
   // safety — these prevent rather than inform
   kubeContextTile, awsProfileTile, gcpProjectTile, protectedBranchTile,
+  // tier 3 — sampled by the daemon, never read on the render path
+  cpuTile, memoryTile, swapTile, diskTile, loadTile, networkTile, gpuTile, vramTile,
   // personal
   verseTile, trackTile, skillsTile,
   // media

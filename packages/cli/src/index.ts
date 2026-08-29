@@ -11,6 +11,7 @@ import { CONFIG_PATH } from "./paths.js";
 import { getCached, spawnDetached } from "./cache.js";
 import { doRefresh, type GitData, type GhData, type CiData, type SkillsData } from "./producers.js";
 import { readPersonal, readSystem, readMedia } from "./local.js";
+import { readMetrics, metricsAreStale } from "./metrics.js";
 import { collectCustom, staleCustom, refreshCustom, toArgv } from "./custom.js";
 import { loadApprovals, approve, revokeAll, isApproved, hashArgv, APPROVALS_PATH } from "./approvals.js";
 import { setCredential, deleteCredential, listCredentialNames } from "./credentials.js";
@@ -102,6 +103,9 @@ function collect(cc: ClaudeStdin, columns: number, cfg: Config): RuntimeData {
       gcp: used.has("gcp-project"),
     }),
     media: {},   // filled only by the tmux path, which can afford the call
+    // Absent when the daemon is not running, or its file has gone stale.
+    metrics: ANY(used, ["cpu","memory","swap","disk","load","network","gpu","vram"])
+      ? readMetrics() : undefined,
   };
 }
 

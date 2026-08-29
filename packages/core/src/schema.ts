@@ -69,7 +69,10 @@ export const SignalSchema = z.enum([
   "pr.approved", "pr.changes", "pr.pending", "pr.open",
   "context.above", "fivehour.above", "sevenday.above",
   "git.conflict", "git.dirty", "git.ahead", "git.behind", "git.clean",
-  "cost.above", "battery.below", "review.waiting", "always",
+  "cost.above", "battery.below", "review.waiting",
+  "cpu.above", "mem.above", "swap.above", "disk.above",
+  "load.above", "gpu.above", "vram.above",
+  "always",
 ]);
 
 export const RuleSchema = z.object({
