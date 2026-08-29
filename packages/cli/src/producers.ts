@@ -175,9 +175,32 @@ export function produceSkills(root: string): SkillsData {
 
 import { produceBattery } from "./local.js";
 
+export interface SafetyData { kubeContext?: string; gcpProject?: string }
+
+/**
+ * Cloud context. Both shell out, so both are cached and never touched on the
+ * render path. AWS is absent here on purpose: it is an env var, which is free.
+ */
+export function produceKube(): SafetyData {
+  if (!has("kubectl")) return {};
+  const ctx = run("kubectl", ["config", "current-context"], undefined, 3000);
+  return ctx ? { kubeContext: ctx } : {};
+}
+
+export function produceGcp(): SafetyData {
+  // gcloud is slow to start, so prefer the env var when it is set.
+  const env = process.env.CLOUDSDK_CORE_PROJECT;
+  if (env) return { gcpProject: env };
+  if (!has("gcloud")) return {};
+  const proj = run("gcloud", ["config", "get-value", "project"], undefined, 8000);
+  return proj && proj !== "(unset)" ? { gcpProject: proj } : {};
+}
+
 export const PRODUCERS: Record<string, (root: string) => unknown> = {
   git: produceGit, gh: produceGh, ci: produceCi, skills: produceSkills,
   battery: () => produceBattery(),
+  kube: () => produceKube(),
+  gcp: () => produceGcp(),
 };
 
 export function doRefresh(kind: string, root: string) {

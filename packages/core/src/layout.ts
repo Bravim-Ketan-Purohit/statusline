@@ -125,6 +125,12 @@ export interface FitResult {
   kept: ResolvedTile[];
   dropped: ResolvedTile[];
   width: number;
+  /**
+   * Unused columns. A row may mark exactly one tile `flex`; that tile absorbs
+   * the slack, which right-aligns everything after it. Zero when the width is
+   * unknown (cols <= 0) or nothing is spare.
+   */
+  slack: number;
 }
 
 /**
@@ -141,7 +147,7 @@ export function fitRow(tiles: ResolvedTile[], cols: number, gap: number, pad: nu
   const measure = (list: ResolvedTile[]) =>
     list.reduce((w, t) => w + t.width + pad * 2, 0) + Math.max(0, list.length - 1) * gap;
 
-  if (cols <= 0) return { kept: items, dropped, width: measure(items) };
+  if (cols <= 0) return { kept: items, dropped, width: measure(items), slack: 0 };
 
   while (items.length && measure(items) > cols) {
     // Ties resolve to the earliest index, which keeps ordering deterministic.
@@ -151,5 +157,8 @@ export function fitRow(tiles: ResolvedTile[], cols: number, gap: number, pad: nu
     }
     dropped.push(items.splice(worst, 1)[0]!);
   }
-  return { kept: items, dropped, width: measure(items) };
+  const width = measure(items);
+  // Slack only means anything when a tile is there to absorb it.
+  const slack = items.some((t) => t.flex) ? Math.max(0, cols - width) : 0;
+  return { kept: items, dropped, width, slack };
 }

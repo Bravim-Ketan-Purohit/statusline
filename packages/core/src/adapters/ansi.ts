@@ -182,7 +182,13 @@ export function renderTileAnsi(rt: ResolvedTile, cfg: Config, opts: AnsiOptions)
 function spanAnsi(s: Span, cfg: Config, base: string): string {
   const mode = cfg.theme.colorMode;
   let pre = "";
-  const fg = resolveColor(s.fg, cfg);
+  // Danger overrides every other colour. A safety tile that quietly inherits
+  // a theme colour is a safety tile that failed.
+  if (s.danger) {
+    const d = resolveColor(cfg.theme.dangerColor, cfg);
+    if (d) pre += sgr(d, "fg", mode) + "\x1b[1m";
+  }
+  const fg = s.danger ? undefined : resolveColor(s.fg, cfg);
   if (fg) pre += sgr(fg, "fg", mode);
   const bg = resolveColor(s.bg, cfg);
   if (bg) pre += sgr(bg, "bg", mode);
@@ -199,8 +205,11 @@ export function osc8(url: string, text: string): string {
 }
 
 export function renderRowAnsi(kept: ResolvedTile[], cfg: Config, opts: AnsiOptions,
-                              rowIndex = 0, rowCount = 1): string {
-  const line = kept.map((t) => renderTileAnsi(t, cfg, opts)).join(" ".repeat(opts.gap));
+                              rowIndex = 0, rowCount = 1, slack = 0): string {
+  // The flex tile swallows the slack, which pushes everything after it right.
+  const line = kept
+    .map((t) => renderTileAnsi(t, cfg, opts) + (t.flex && slack > 0 ? " ".repeat(slack) : ""))
+    .join(" ".repeat(opts.gap));
   const fill = cfg.theme.terminalFill;
   if (!fill || fill.kind === "none") return line;
   return paintFill(line, fill, cfg, opts, rowIndex, rowCount);

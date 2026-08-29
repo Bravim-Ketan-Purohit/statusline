@@ -32,7 +32,11 @@ const firstLine = (p: string) => {
  * actually on the sheet, and then through the cache like every other
  * subprocess. Everything else is a file read or an env lookup.
  */
-export function readSystem(root: string | null, cwd: string, wantBattery: boolean): SystemInfo {
+export interface SystemWants {
+  battery: boolean; kube: boolean; aws: boolean; gcp: boolean;
+}
+
+export function readSystem(root: string | null, cwd: string, want: SystemWants): SystemInfo {
   const base = root ?? cwd;
   const ve = process.env.VIRTUAL_ENV;
   const py = firstLine(join(base, ".python-version"));
@@ -42,7 +46,19 @@ export function readSystem(root: string | null, cwd: string, wantBattery: boolea
     venv: ve ? ve.replace(/\/+$/, "").split("/").pop() : undefined,
     pythonVersion: py || undefined,
     nodeVersion: nv ? nv.replace(/^v/, "") : undefined,
-    battery: wantBattery ? getCached<{ battery: SystemInfo["battery"] }>("battery", "system", 60_000).battery : undefined,
+    battery: want.battery
+      ? getCached<{ battery: SystemInfo["battery"] }>("battery", "system", 60_000).battery
+      : undefined,
+    // AWS is a free env read; the other two are cached subprocesses.
+    awsProfile: want.aws
+      ? (process.env.AWS_PROFILE || process.env.AWS_DEFAULT_PROFILE || "default")
+      : undefined,
+    kubeContext: want.kube
+      ? getCached<{ kubeContext?: string }>("kube", "system", 10_000).kubeContext
+      : undefined,
+    gcpProject: want.gcp
+      ? getCached<{ gcpProject?: string }>("gcp", "system", 300_000).gcpProject
+      : undefined,
   };
 }
 

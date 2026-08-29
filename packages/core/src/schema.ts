@@ -133,6 +133,9 @@ export const TileSchema = z.object({
 export const RowSchema = z.object({
   id: z.string().min(1),
   tiles: z.array(TileSchema).default([]),
+}).refine((r) => r.tiles.filter((t) => t.flex).length <= 1, {
+  message: "a row may mark at most one tile flex; two would each claim the same slack",
+  path: ["tiles"],
 });
 
 export const BreakpointSchema = z.object({
@@ -148,6 +151,11 @@ export const ConfigSchema = z.object({
   theme: z
     .object({
       terminalBg: Hex.default("#16181c"),
+      /** Name segments that mean production. A safety tile reddens on a match. */
+      dangerPatterns: z.array(z.string()).default(["prod", "production", "prd", "live"]),
+      dangerColor: ColorRef.default("#ff5f5f"),
+      /** Branches the protected-branch tile warns about. */
+      protectedBranches: z.array(z.string()).default(["main", "master", "release"]),
       /** Optional gradient behind the whole bar, same rules as a tile's. */
       terminalGradient: GradientSchema.nullable().default(null),
       /** The whole-bar fill. Supersedes terminalGradient; v1 configs migrate. */

@@ -64,8 +64,16 @@ export function sampleData(now: Date): Omit<RuntimeData, "columns"> {
     system: {
       hostname: "mbp", venv: "venv", nodeVersion: "22.11.0", pythonVersion: "3.12",
       battery: { percent: 84, charging: false },
+      // A production context on purpose, so the danger style is visible while
+      // you design rather than only discovered in a real terminal.
+      kubeContext: "arn:aws:eks:us-east-1:481:cluster/acme-prod",
+      awsProfile: "acme-prod",
+      gcpProject: "acme-staging",
+    },
+    custom: {
+      __danger: JSON.stringify(["prod", "production", "prd", "live"]),
+      __protected: JSON.stringify(["main", "master", "release"]),
     },
     media: { title: "Sandese Aate Hai", artist: "Sonu Nigam", playing: true },
-    custom: {},
   };
 }

@@ -16,56 +16,56 @@ Sizes are rough: **S** < 1h · **M** 1–4h · **L** 4–12h · **XL** multi-day
 
 ### 1.1 Danger-style mechanism (blocks 1.2–1.6)
 
-- [ ] **1.1.1** Add `dangerPatterns: string[]` to `ThemeSchema` in `core/src/schema.ts`, default `["prod", "production"]`
-- [ ] **1.1.2** Add `dangerColor: ColorRef` to `ThemeSchema`, default `"#ff5f5f"`
-- [ ] **1.1.3** Create `core/src/danger.ts` exporting `isDangerous(value: string, patterns: string[]): boolean`
-  - [ ] **1.1.3.1** Match on whole word or name segment only — `prod` must hit `eks-prod` but not `product`
-  - [ ] **1.1.3.2** Case-insensitive
-  - [ ] **1.1.3.3** Unit test with: `prod`, `production`, `eks-prod-1`, `product`, `reproduce`, `staging`
-- [ ] **1.1.4** Add `danger?: boolean` to `Span` in `core/src/spans.ts`
-- [ ] **1.1.5** In `adapters/ansi.ts` `spanAnsi()`, a `danger` span forces `theme.dangerColor` and bold, ignoring every other colour
-- [ ] **1.1.6** Same in `adapters/web.ts` `toWebSpan()` and `adapters/tmux.ts` `spanTmux()`
-- [ ] **1.1.7** Test: a danger span is red under all three colour modes and in all three adapters
+- [x] **1.1.1** Add `dangerPatterns: string[]` to `ThemeSchema` in `core/src/schema.ts`, default `["prod", "production"]`
+- [x] **1.1.2** Add `dangerColor: ColorRef` to `ThemeSchema`, default `"#ff5f5f"`
+- [x] **1.1.3** Create `core/src/danger.ts` exporting `isDangerous(value: string, patterns: string[]): boolean`
+  - [x] **1.1.3.1** Match on whole word or name segment only — `prod` must hit `eks-prod` but not `product`
+  - [x] **1.1.3.2** Case-insensitive
+  - [x] **1.1.3.3** Unit test with: `prod`, `production`, `eks-prod-1`, `product`, `reproduce`, `staging`
+- [x] **1.1.4** Add `danger?: boolean` to `Span` in `core/src/spans.ts`
+- [x] **1.1.5** In `adapters/ansi.ts` `spanAnsi()`, a `danger` span forces `theme.dangerColor` and bold, ignoring every other colour
+- [x] **1.1.6** Same in `adapters/web.ts` `toWebSpan()` and `adapters/tmux.ts` `spanTmux()`
+- [x] **1.1.7** Test: a danger span is red under all three colour modes and in all three adapters
 
 ### 1.2 Kubernetes context tile
 
-- [ ] **1.2.1** Add `kubeContext?: string` to `SystemInfo` in `core/src/runtime.ts`
-- [ ] **1.2.2** Create `core/src/tiles/safety.ts`
-- [ ] **1.2.3** Implement `kubeContextTile` — id `kube-context`, category `environment`, tier 2, caps `[]`
-  - [ ] **1.2.3.1** Return `[]` when `data.system?.kubeContext` is absent
-  - [ ] **1.2.3.2** Mark the span `danger: true` when `isDangerous(ctx, theme.dangerPatterns)`
-  - [ ] **1.2.3.3** Compact mode: last path segment only
-- [ ] **1.2.4** Register in `core/src/tiles/registry.ts`
-- [ ] **1.2.5** CLI producer in `cli/src/producers.ts`: `produceKube()` runs `kubectl config current-context`
-  - [ ] **1.2.5.1** Guard with `has("kubectl")`; return `{}` when absent
-  - [ ] **1.2.5.2** 3s timeout
-  - [ ] **1.2.5.3** Register in `PRODUCERS` under key `kube`
-- [ ] **1.2.6** Gate collection in `cli/src/index.ts` `collect()` on `used.has("kube-context")`, TTL 10s
-- [ ] **1.2.7** Add to `sampleData.ts` so the tile is visible in the builder
+- [x] **1.2.1** Add `kubeContext?: string` to `SystemInfo` in `core/src/runtime.ts`
+- [x] **1.2.2** Create `core/src/tiles/safety.ts`
+- [x] **1.2.3** Implement `kubeContextTile` — id `kube-context`, category `environment`, tier 2, caps `[]`
+  - [x] **1.2.3.1** Return `[]` when `data.system?.kubeContext` is absent
+  - [x] **1.2.3.2** Mark the span `danger: true` when `isDangerous(ctx, theme.dangerPatterns)`
+  - [x] **1.2.3.3** Compact mode: last path segment only
+- [x] **1.2.4** Register in `core/src/tiles/registry.ts`
+- [x] **1.2.5** CLI producer in `cli/src/producers.ts`: `produceKube()` runs `kubectl config current-context`
+  - [x] **1.2.5.1** Guard with `has("kubectl")`; return `{}` when absent
+  - [x] **1.2.5.2** 3s timeout
+  - [x] **1.2.5.3** Register in `PRODUCERS` under key `kube`
+- [x] **1.2.6** Gate collection in `cli/src/index.ts` `collect()` on `used.has("kube-context")`, TTL 10s
+- [x] **1.2.7** Add to `sampleData.ts` so the tile is visible in the builder
 
 ### 1.3 AWS profile tile
 
-- [ ] **1.3.1** Add `awsProfile?: string` to `SystemInfo`
-- [ ] **1.3.2** Implement `awsProfileTile` — id `aws-profile`, tier 1 (env var, no subprocess)
-- [ ] **1.3.3** CLI: read `$AWS_PROFILE`; fall back to `$AWS_DEFAULT_PROFILE`; else `default`
-  - [ ] **1.3.3.1** Do **not** parse `~/.aws/config` on the render path
-- [ ] **1.3.4** Danger-mark on pattern match
-- [ ] **1.3.5** Register + sample data
+- [x] **1.3.1** Add `awsProfile?: string` to `SystemInfo`
+- [x] **1.3.2** Implement `awsProfileTile` — id `aws-profile`, tier 1 (env var, no subprocess)
+- [x] **1.3.3** CLI: read `$AWS_PROFILE`; fall back to `$AWS_DEFAULT_PROFILE`; else `default`
+  - [x] **1.3.3.1** Do **not** parse `~/.aws/config` on the render path
+- [x] **1.3.4** Danger-mark on pattern match
+- [x] **1.3.5** Register + sample data
 
 ### 1.4 GCP project tile
 
-- [ ] **1.4.1** Add `gcpProject?: string` to `SystemInfo`
-- [ ] **1.4.2** `produceGcp()` runs `gcloud config get-value project` — slow, so TTL 300s
-- [ ] **1.4.3** Prefer `$CLOUDSDK_CORE_PROJECT` when set (free, no subprocess)
-- [ ] **1.4.4** Register + sample data + danger mark
+- [x] **1.4.1** Add `gcpProject?: string` to `SystemInfo`
+- [x] **1.4.2** `produceGcp()` runs `gcloud config get-value project` — slow, so TTL 300s
+- [x] **1.4.3** Prefer `$CLOUDSDK_CORE_PROJECT` when set (free, no subprocess)
+- [x] **1.4.4** Register + sample data + danger mark
 
 ### 1.5 Protected-branch warning tile
 
-- [ ] **1.5.1** Add `protectedBranches: string[]` to `ThemeSchema`, default `["main", "master", "release"]`
-- [ ] **1.5.2** Implement `protectedBranchTile` — reads `data.git.branch`, tier 1
-- [ ] **1.5.3** Render only when the branch is in the list; otherwise `[]`
-- [ ] **1.5.4** Always danger-styled — this tile exists only to shout
-- [ ] **1.5.5** Register + sample data
+- [x] **1.5.1** Add `protectedBranches: string[]` to `ThemeSchema`, default `["main", "master", "release"]`
+- [x] **1.5.2** Implement `protectedBranchTile` — reads `data.git.branch`, tier 1
+- [x] **1.5.3** Render only when the branch is in the list; otherwise `[]`
+- [x] **1.5.4** Always danger-styled — this tile exists only to shout
+- [x] **1.5.5** Register + sample data
 
 ### 1.6 Sandbox state tile
 
@@ -75,9 +75,9 @@ Sizes are rough: **S** < 1h · **M** 1–4h · **L** 4–12h · **XL** multi-day
 
 ### 1.7 Safety bundle
 
-- [ ] **1.7.1** Update `SAFETY_TILES` in `web/src/lib/bundles.ts` to the real list
-- [ ] **1.7.2** Verify the "append safety to every bundle" checkbox now does something visible
-- [ ] **1.7.3** Screenshot test: applying any bundle with safety on includes the safety tiles
+- [x] **1.7.1** Update `SAFETY_TILES` in `web/src/lib/bundles.ts` to the real list
+- [x] **1.7.2** Verify the "append safety to every bundle" checkbox now does something visible
+- [x] **1.7.3** Screenshot test: applying any bundle with safety on includes the safety tiles
 
 ---
 
@@ -152,39 +152,39 @@ Sizes are rough: **S** < 1h · **M** 1–4h · **L** 4–12h · **XL** multi-day
 
 ### 3.1 `flex` — stored but never used
 
-- [ ] **3.1.1** Decide the semantics: one flex tile per row absorbs slack; tiles after it are right-aligned
-- [ ] **3.1.2** Implement in `core/src/layout.ts` `fitRow()`
-  - [ ] **3.1.2.1** Return `slack` (available columns minus measured width) in `FitResult`
-  - [ ] **3.1.2.2** Reject more than one flex tile per row in the schema with a clear message
-- [ ] **3.1.3** `adapters/ansi.ts` `renderRowAnsi()` — pad the flex tile with `slack` spaces
-- [ ] **3.1.4** `adapters/tmux.ts` — same, but note tmux right-aligns natively via `status-right`
-- [ ] **3.1.5** `adapters/web.ts` — carry `slack` so the preview matches
-- [ ] **3.1.6** `separatorTile` should set `flex: true` by default — it exists for exactly this
-- [ ] **3.1.7** Test: a row with a flex separator right-aligns everything after it, at three widths
+- [x] **3.1.1** Decide the semantics: one flex tile per row absorbs slack; tiles after it are right-aligned
+- [x] **3.1.2** Implement in `core/src/layout.ts` `fitRow()`
+  - [x] **3.1.2.1** Return `slack` (available columns minus measured width) in `FitResult`
+  - [x] **3.1.2.2** Reject more than one flex tile per row in the schema with a clear message
+- [x] **3.1.3** `adapters/ansi.ts` `renderRowAnsi()` — pad the flex tile with `slack` spaces
+- [x] **3.1.4** `adapters/tmux.ts` — same, but note tmux right-aligns natively via `status-right`
+- [x] **3.1.5** `adapters/web.ts` — carry `slack` so the preview matches
+- [x] **3.1.6** `separatorTile` should set `flex: true` by default — it exists for exactly this
+- [x] **3.1.7** Test: a row with a flex separator right-aligns everything after it, at three widths
 
 ### 3.2 Custom-command tile is inert
 
-- [ ] **3.2.1** Decide: wire it up, or remove it from the registry. **Do not leave it shipping and dead.**
-- [ ] **3.2.2** If wiring: add `produceCustom(root, commands)` to `cli/src/producers.ts`
-  - [ ] **3.2.2.1** Collect every `command` tile's `props.command` from the config
-  - [ ] **3.2.2.2** Run each via `spawnSync` with `shell: false`, argv array only — **never `sh -c`**
-  - [ ] **3.2.2.3** Pass `terminal_width` on stdin as the spec requires
-  - [ ] **3.2.2.4** 2s timeout each; cap combined output at 4KB
-  - [ ] **3.2.2.5** Cache per command string, TTL from `props.ttl`, default 30s
-- [ ] **3.2.3** Populate `RuntimeData.custom` in `collect()`, keyed by command string
-- [ ] **3.2.4** Strip ANSI from command output before measuring — a command may emit colour
-- [ ] **3.2.5** Builder: warn in the inspector that a custom command runs on your machine
-- [ ] **3.2.6** Test: a command tile renders its output; a failing command renders nothing, not an error
+- [x] **3.2.1** Decide: wire it up, or remove it from the registry. **Do not leave it shipping and dead.**
+- [x] **3.2.2** If wiring: add `produceCustom(root, commands)` to `cli/src/producers.ts`
+  - [x] **3.2.2.1** Collect every `command` tile's `props.command` from the config
+  - [x] **3.2.2.2** Run each via `spawnSync` with `shell: false`, argv array only — **never `sh -c`**
+  - [x] **3.2.2.3** Pass `terminal_width` on stdin as the spec requires
+  - [x] **3.2.2.4** 2s timeout each; cap combined output at 4KB
+  - [x] **3.2.2.5** Cache per command string, TTL from `props.ttl`, default 30s
+- [x] **3.2.3** Populate `RuntimeData.custom` in `collect()`, keyed by command string
+- [x] **3.2.4** Strip ANSI from command output before measuring — a command may emit colour
+- [x] **3.2.5** Builder: warn in the inspector that a custom command runs on your machine
+- [x] **3.2.6** Test: a command tile renders its output; a failing command renders nothing, not an error
 
 ### 3.3 Credentials never loaded
 
-- [ ] **3.3.1** `CREDENTIALS_PATH` is defined in `cli/src/paths.ts` and never read
-- [ ] **3.3.2** Implement `readCredentials(): Record<string, string>` with mode check
-  - [ ] **3.3.2.1** Refuse to read if the file is not `0600`; warn to stderr once
-  - [ ] **3.3.2.2** Return `{}` on missing or malformed
-- [ ] **3.3.3** Expose to producers only, never to `RuntimeData` — a tile must not see a token
-- [ ] **3.3.4** `statusline creds set <name>` / `list` subcommands (list shows names, never values)
-- [ ] **3.3.5** Test: values never appear in `statusline export` output
+- [x] **3.3.1** `CREDENTIALS_PATH` is defined in `cli/src/paths.ts` and never read
+- [x] **3.3.2** Implement `readCredentials(): Record<string, string>` with mode check
+  - [x] **3.3.2.1** Refuse to read if the file is not `0600`; warn to stderr once
+  - [x] **3.3.2.2** Return `{}` on missing or malformed
+- [x] **3.3.3** Expose to producers only, never to `RuntimeData` — a tile must not see a token
+- [x] **3.3.4** `statusline creds set <name>` / `list` subcommands (list shows names, never values)
+- [x] **3.3.5** Test: values never appear in `statusline export` output
 
 ---
 

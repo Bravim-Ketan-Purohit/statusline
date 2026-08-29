@@ -57,6 +57,16 @@ function spawnRefresh(kind: string, root: string) {
   }
 }
 
+/** Fire-and-forget re-invocation of this same binary. */
+export function spawnDetached(args: string[]) {
+  ensureDir();
+  try {
+    const here = fileURLToPath(import.meta.url);
+    const self = here.endsWith("statusline.js") ? here : here.replace(/cache\.js$/, "index.js");
+    spawn(process.execPath, [self, ...args], { detached: true, stdio: "ignore" }).unref();
+  } catch { /* a failed spawn simply leaves the value stale */ }
+}
+
 export function releaseLock(kind: string, root: string) {
   try { unlinkSync(keyFor(kind, root, ".lock")); } catch { /* ignore */ }
 }

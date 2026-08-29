@@ -8,6 +8,9 @@ export const DEFAULT_CONFIG: Config = {
   meta: { name: "phase-1", cellWidth: 8.4 },
   theme: {
     terminalBg: "#16181c",
+    dangerPatterns: ["prod", "production", "prd", "live"],
+    dangerColor: "#ff5f5f",
+    protectedBranches: ["main", "master", "release"],
     terminalGradient: null,
     palette: { accent: "#d78700", muted: "#6c6f85" },
     colorMode: "truecolor",

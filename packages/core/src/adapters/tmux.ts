@@ -29,7 +29,9 @@ function style(cfg: Config, fg?: string, bg?: string, bold?: boolean, dim?: bool
 }
 
 function spanTmux(s: Span, cfg: Config, base: string): string {
-  const own = style(cfg, s.fg, s.bg, s.bold, s.dim);
+  const own = s.danger
+    ? style(cfg, cfg.theme.dangerColor, s.bg, true, false)
+    : style(cfg, s.fg, s.bg, s.bold, s.dim);
   // tmux has no OSC 8; the link text still renders, the URL is simply dropped.
   return own ? own + escapeTmux(s.text) + "#[none]" + base : escapeTmux(s.text);
 }
@@ -44,8 +46,13 @@ export function renderTileTmux(rt: ResolvedTile, cfg: Config, pad: number): stri
   return action ? `#[range=user|${action}]${inner}#[norange]` : inner;
 }
 
-export function renderRowTmux(kept: ResolvedTile[], cfg: Config, pad: number, gap: number): string {
-  return kept.map((t) => renderTileTmux(t, cfg, pad)).join(" ".repeat(gap));
+export function renderRowTmux(kept: ResolvedTile[], cfg: Config, pad: number, gap: number,
+                              slack = 0): string {
+  // tmux right-aligns status-right natively, but a flex tile inside the string
+  // still has to be honoured or a left-side bar will not align at all.
+  return kept
+    .map((t) => renderTileTmux(t, cfg, pad) + (t.flex && slack > 0 ? " ".repeat(slack) : ""))
+    .join(" ".repeat(gap));
 }
 
 /** The .tmux.conf snippet that makes the clicks actually work. */

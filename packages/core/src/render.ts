@@ -29,9 +29,9 @@ export function renderAnsi(cfg: Config, data: RuntimeData): string[] {
   for (let i = 0; i < cfg.rows.length; i++) {
     const built = buildRow(cfg, i, data, cols);
     if (!built.length) continue;
-    const { kept } = fitRow(built, cols, opts.gap, opts.pad);
+    const { kept, slack } = fitRow(built, cols, opts.gap, opts.pad);
     if (!kept.length) continue;
-    lines.push(renderRowAnsi(kept, cfg, opts, lines.length, cfg.rows.length));
+    lines.push(renderRowAnsi(kept, cfg, opts, lines.length, cfg.rows.length, slack));
     if (lines.length >= cfg.targets.claudeCode.maxRows) break;
   }
   return lines;
@@ -49,8 +49,8 @@ export function renderTmux(cfg: Config, data: RuntimeData): string {
   for (let i = 0; i < cfg.rows.length; i++) {
     const built = buildRow(cfg, i, data, cols);
     if (!built.length) continue;
-    const { kept } = fitRow(built, cols, opts.gap, opts.pad);
-    if (kept.length) out.push(renderRowTmux(kept, cfg, opts.pad, opts.gap));
+    const { kept, slack } = fitRow(built, cols, opts.gap, opts.pad);
+    if (kept.length) out.push(renderRowTmux(kept, cfg, opts.pad, opts.gap, slack));
   }
   return out.join(" ");
 }

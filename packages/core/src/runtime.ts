@@ -80,6 +80,10 @@ export interface PersonalInfo {
 
 export interface SystemInfo {
   hostname?: string;
+  /** Safety context, resolved by the host. */
+  kubeContext?: string;
+  awsProfile?: string;
+  gcpProject?: string;
   battery?: { percent: number; charging: boolean };
   venv?: string;
   nodeVersion?: string;

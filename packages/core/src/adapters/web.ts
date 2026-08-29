@@ -34,6 +34,7 @@ export interface WebTile {
   fg?: string;
   gradient?: { from: string; to: string; animated: boolean; speed: number } | null;
   fill?: Fill;
+  flex: boolean;
   border?: Border;
   borderColor?: string;
   effect?: ResolvedEffect;
@@ -48,6 +49,8 @@ export interface WebRow {
   tiles: WebTile[];
   /** total columns the kept tiles occupy, including padding and gaps */
   width: number;
+  /** columns the flex tile absorbs, so the preview aligns like the terminal */
+  slack: number;
 }
 
 export interface WebRender {
@@ -95,13 +98,15 @@ const ANSI16_HEX = [
 
 function toWebSpan(s: Span, cfg: Config): WebSpan {
   const mode = cfg.theme.colorMode;
-  const fg = resolveColor(s.fg, cfg);
+  const fg = s.danger
+    ? resolveColor(cfg.theme.dangerColor, cfg)
+    : resolveColor(s.fg, cfg);
   const bg = resolveColor(s.bg, cfg);
   return {
     text: s.text,
     fg: fg ? quantize(fg, mode) : undefined,
     bg: bg ? quantize(bg, mode) : undefined,
-    bold: s.bold,
+    bold: s.bold || s.danger,
     dim: s.dim,
     link: s.link,
   };
@@ -133,6 +138,7 @@ function toWebTile(rt: ResolvedTile, cfg: Config, ghost: boolean, rowIndex: numb
         }
       : null,
     fill: rt.style.fill,
+    flex: rt.flex,
     border: rt.effect?.border ?? rt.style.border,
     borderColor: (() => {
       const c = rt.effect?.blinkTarget === "border" ? rt.effect.blinkColor : undefined;
@@ -154,12 +160,12 @@ export function renderWeb(cfg: Config, data: RuntimeData): WebRender {
     // keepEmpty: the canvas must show a tile even before it has data.
     const built = buildRow(cfg, i, data, data.columns,
       { keepEmpty: true, nowMs: (data.local.now ?? new Date()).getTime() });
-    const { kept, dropped, width } = fitRow(built, data.columns, opts.gap, opts.pad);
+    const { kept, dropped, width, slack } = fitRow(built, data.columns, opts.gap, opts.pad);
     // Preserve authored order, marking dropped tiles as ghosts in place.
     const keptIds = new Set(kept.map((t) => t.tile.id));
     const tiles = built.map((t) => toWebTile(t, cfg, !keptIds.has(t.tile.id), i));
     if (!tiles.length && !dropped.length) continue;
-    rows.push({ rowId: cfg.rows[i]!.id, tiles, width });
+    rows.push({ rowId: cfg.rows[i]!.id, tiles, width, slack });
   }
   return { rows, breakpointId: bp.id, columns: data.columns, pad: opts.pad, gap: opts.gap };
 }

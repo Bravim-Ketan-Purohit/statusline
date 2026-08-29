@@ -8,6 +8,11 @@ export interface Span {
   dim?: boolean;
   /** OSC 8 target (terminal) / href (web). tmux ignores it. */
   link?: string;
+  /**
+   * Forces the theme's danger colour and bold, overriding every other colour
+   * in every adapter. This is the one place a tile is allowed to shout.
+   */
+  danger?: boolean;
 }
 
 export type RenderMode = "full" | "compact";

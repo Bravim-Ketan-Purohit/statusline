@@ -11,7 +11,11 @@ export interface Bundle {
   tiles: string[];
 }
 
-export const SAFETY_TILES = ["git-branch"];
+/**
+ * Appended to every other bundle by default. These prevent accidents rather
+ * than inform, and each costs a handful of columns.
+ */
+export const SAFETY_TILES = ["kube-context", "aws-profile", "protected-branch"];
 
 export const BUNDLES: Bundle[] = [
   { id: "minimal", name: "Minimal", note: "Model, context, branch.", tiles: ["model", "context-bar", "git-branch"] },
@@ -19,6 +23,8 @@ export const BUNDLES: Bundle[] = [
   { id: "fullstack", name: "Full-stack dev", note: "Git and context, room for CI.", tiles: ["git-branch", "cwd", "context-bar", "model"] },
   { id: "war-room", name: "War room", note: "Burn, cost, and what changed.", tiles: ["model", "context-bar", "five-hour-bar", "git-branch", "clock"] },
   { id: "focus", name: "Focus", note: "Clock and context, nothing else.", tiles: ["clock", "context-bar"] },
+  { id: "safety", name: "Safety", note: "Only the things that stop accidents.",
+    tiles: ["kube-context", "aws-profile", "gcp-project", "protected-branch"] },
 ];
 
 let seq = 0;
@@ -31,7 +37,8 @@ export function makeTile(type: string, priority = 5): Tile {
     props: {},
     style: { gradient: null, glyph: "", label: "", labelDim: true },
     action: null,
-    flex: false,
+    // A separator exists only to absorb slack, so it arrives flexed.
+    flex: type === "separator",
     responsive: { priority, sm: { compact: true }, md: { compact: false } },
   } as Tile;
 }

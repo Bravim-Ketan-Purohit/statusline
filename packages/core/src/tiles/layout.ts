@@ -15,20 +15,25 @@ export const spacerTile = t<{ width: number }>({
   render: (props) => [span(" ".repeat(Math.max(1, Math.min(40, props.width))))],
 });
 
-/** Marked flex by the layout solver; renders nothing itself. */
+/**
+ * The separator exists to absorb slack. It renders one space; the solver adds
+ * the rest, which right-aligns everything after it. Set `flex: true` on the
+ * tile for it to do anything -- the builder does this when you add one.
+ */
 export const separatorTile = t<Record<string, never>>({
   id: "separator", displayName: "Flex separator", category: "layout", tier: 1,
   capabilities: [], defaultProps: {},
   render: () => [span(" ")],
 });
 
-export const commandTile = t<{ command: string; label: string }>({
+export const commandTile = t<{ command: string; label: string; ttl: number }>({
   id: "command", displayName: "Custom command", category: "layout", tier: 2,
-  capabilities: [], defaultProps: { command: "", label: "" },
-  render(props, { custom }, _mode) {
+  capabilities: [], defaultProps: { command: "", label: "", ttl: 30 },
+  render(props, { custom }, mode) {
     // The host runs and caches the command; the tile only formats the result.
-    const key = props.command;
-    const out = custom?.[key];
-    return out ? [span(out.split("\n")[0]!.slice(0, 120))] : [];
+    const out = custom?.[props.command];
+    if (!out) return [];
+    const text = out.split("\n")[0]!;
+    return [span(mode === "compact" ? text.slice(0, 24) : text.slice(0, 120))];
   },
 });
