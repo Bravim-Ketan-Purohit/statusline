@@ -154,11 +154,13 @@ export function Specimen({
                   data-dragging={dragging === t.tileId}
                   data-ghost={t.ghost}
                   data-empty={t.empty}
+                  data-suppressed={t.suppressed}
                   data-selected={selected === t.tileId}
                   className="spec-tile"
                   role="button"
                   tabIndex={0}
-                  title={t.empty ? `${t.type}: no data in this preview — hidden in a real terminal` : t.type}
+                  title={t.suppressed ? `${t.type}: hidden in a terminal right now by its visibility rule`
+                       : t.empty ? `${t.type}: no data in this preview — hidden in a real terminal` : t.type}
                   aria-label={`${t.type}${t.ghost ? ", dropped at this width" : ""}${t.empty ? ", no data" : ""}`}
                   onClick={(e) => { e.stopPropagation(); onSelect(t.tileId); }}
                   onKeyDown={(e) => (e.key === "Enter" || e.key === " ") && (e.preventDefault(), onSelect(t.tileId))}

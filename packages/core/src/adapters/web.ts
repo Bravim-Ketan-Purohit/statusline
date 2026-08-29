@@ -42,6 +42,8 @@ export interface WebTile {
   ghost: boolean;
   /** true when the tile has no data and this is a builder placeholder */
   empty: boolean;
+  /** true when hideWhen / showOnlyWhen would remove it from the terminal */
+  suppressed: boolean;
 }
 
 export interface WebRow {
@@ -148,6 +150,7 @@ function toWebTile(rt: ResolvedTile, cfg: Config, ghost: boolean, rowIndex: numb
     effect: rt.effect,
     ghost,
     empty: rt.empty ?? false,
+    suppressed: rt.suppressed ?? false,
   };
 }
 
@@ -159,7 +162,7 @@ export function renderWeb(cfg: Config, data: RuntimeData): WebRender {
   for (let i = 0; i < cfg.rows.length; i++) {
     // keepEmpty: the canvas must show a tile even before it has data.
     const built = buildRow(cfg, i, data, data.columns,
-      { keepEmpty: true, nowMs: (data.local.now ?? new Date()).getTime() });
+      { keepEmpty: true, keepSuppressed: true, nowMs: (data.local.now ?? new Date()).getTime() });
     const { kept, dropped, width, slack } = fitRow(built, data.columns, opts.gap, opts.pad);
     // Preserve authored order, marking dropped tiles as ghosts in place.
     const keptIds = new Set(kept.map((t) => t.tile.id));

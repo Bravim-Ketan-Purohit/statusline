@@ -78,6 +78,8 @@ export const SignalSchema = z.enum([
 export const RuleSchema = z.object({
   signal: SignalSchema,
   threshold: z.number().optional(),
+  /** While firing, this rule overrides hideWhen and showOnlyWhen. */
+  escalate: z.boolean().optional(),
   fg: ColorRef.optional(),
   bg: ColorRef.optional(),
   border: BorderSchema.optional(),
@@ -94,6 +96,18 @@ export const TileStyleSchema = z.object({
   border: BorderSchema.optional(),
   /** Conditional styling; later rules win. */
   rules: z.array(RuleSchema).max(12).optional(),
+  /**
+   * Attention management. `hideWhen` removes the tile while any listed signal
+   * holds; `showOnlyWhen` is the inverse and is the common case -- CI visible
+   * only when it is failing. Both reuse the rules engine's signal set rather
+   * than introducing a second condition language.
+   */
+  hideWhen: z.array(z.object({
+    signal: SignalSchema, threshold: z.number().optional(),
+  })).max(8).optional(),
+  showOnlyWhen: z.array(z.object({
+    signal: SignalSchema, threshold: z.number().optional(),
+  })).max(8).optional(),
   glyph: z.string().default(""),
   label: z.string().default(""),
   labelDim: z.boolean().default(true),

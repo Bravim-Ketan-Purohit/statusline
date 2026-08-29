@@ -1,4 +1,5 @@
 import { SIGNALS, EDGE_LIST, type Rule, type SignalId, type Border } from "@statusline/core";
+type Visibility = { signal: SignalId; threshold?: number };
 import { IconTrash, IconLocked } from "./Icons";
 
 /**
@@ -54,13 +55,18 @@ function BorderControls({
 }
 
 export function RulesEditor({
-  border, rules, nerdFont, onBorder, onRules,
+  border, rules, nerdFont, hideWhen, showOnlyWhen, suppressed,
+  onBorder, onRules, onVisibility,
 }: {
   border: Border | undefined;
   rules: Rule[] | undefined;
   nerdFont: boolean;
+  hideWhen: Visibility[] | undefined;
+  showOnlyWhen: Visibility[] | undefined;
+  suppressed?: boolean;
   onBorder: (b: Border | undefined) => void;
   onRules: (r: Rule[] | undefined) => void;
+  onVisibility: (v: { hideWhen?: Visibility[]; showOnlyWhen?: Visibility[] }) => void;
 }) {
   const list = rules ?? [];
   const set = (i: number, patch: Partial<Rule>) =>
@@ -81,6 +87,68 @@ export function RulesEditor({
           </span>
         </div>
       </div>
+
+      <div className="section-rule">Visibility</div>
+      <div className="field-row">
+        <label htmlFor="v-mode">Show</label>
+        <select id="v-mode"
+                value={showOnlyWhen?.length ? "only" : hideWhen?.length ? "hide" : "always"}
+                onChange={(e) => {
+                  const v = e.target.value;
+                  if (v === "always") return onVisibility({ hideWhen: undefined, showOnlyWhen: undefined });
+                  const first: Visibility = { signal: "ci.failing" };
+                  if (v === "only") return onVisibility({ showOnlyWhen: [first], hideWhen: undefined });
+                  return onVisibility({ hideWhen: [first], showOnlyWhen: undefined });
+                }}>
+          <option value="always">always</option>
+          <option value="only">only when…</option>
+          <option value="hide">except when…</option>
+        </select>
+      </div>
+      {(showOnlyWhen?.length || hideWhen?.length) ? (
+        <>
+          <div className="field-row">
+            <label>Signal</label>
+            <select
+              value={(showOnlyWhen ?? hideWhen)![0]!.signal}
+              onChange={(e) => {
+                const sig = e.target.value as SignalId;
+                const def = SIGNALS.find((s) => s.id === sig);
+                const next: Visibility[] = [{ signal: sig, threshold: def?.threshold?.def }];
+                onVisibility(showOnlyWhen?.length ? { showOnlyWhen: next } : { hideWhen: next });
+              }}>
+              {SIGNALS.map((s) => <option key={s.id} value={s.id}>{s.name}</option>)}
+            </select>
+          </div>
+          {(() => {
+            const cur = (showOnlyWhen ?? hideWhen)![0]!;
+            const def = SIGNALS.find((s) => s.id === cur.signal);
+            if (!def?.threshold) return null;
+            return (
+              <div className="field-row">
+                <label>{def.threshold.label}</label>
+                <input type="number" min={def.threshold.min} max={def.threshold.max}
+                       step={def.threshold.step} value={cur.threshold ?? def.threshold.def}
+                       onChange={(e) => {
+                         const next: Visibility[] = [{ ...cur, threshold: Number(e.target.value) }];
+                         onVisibility(showOnlyWhen?.length ? { showOnlyWhen: next } : { hideWhen: next });
+                       }} />
+              </div>
+            );
+          })()}
+          <div className="field-row">
+            <div className="cap-note">
+              <IconLocked size={13} />
+              <span>
+                {suppressed
+                  ? "Hidden in a terminal right now. The canvas keeps it hatched so you can still edit it."
+                  : "Visible in a terminal right now."}
+                {" "}An escalating rule below overrides this, so an alarm is never filtered away.
+              </span>
+            </div>
+          </div>
+        </>
+      ) : null}
 
       <div className="section-rule">When… then</div>
       {!list.length && (
@@ -127,6 +195,11 @@ export function RulesEditor({
             <BorderControls border={r.border} nerdFont={nerdFont}
                             onChange={(b) => set(i, { border: b })} />
 
+            <div className="field-row">
+              <label>Escalate</label>
+              <input type="checkbox" checked={!!r.escalate}
+                     onChange={(e) => set(i, { escalate: e.target.checked || undefined })} />
+            </div>
             <div className="field-row">
               <label>Blink</label>
               <input type="checkbox" checked={!!r.blink}

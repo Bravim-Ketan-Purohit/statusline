@@ -173,6 +173,8 @@ export interface BlinkSpec {
 export interface Rule {
   signal: SignalId;
   threshold?: number;
+  /** Overrides hideWhen while firing: an incident must never be filtered away. */
+  escalate?: boolean;
   fg?: string;
   bg?: string;
   border?: Border;
@@ -218,4 +220,33 @@ export function evaluateRules(rules: Rule[] | undefined, d: RuntimeData, nowMs: 
     }
   }
   return out;
+}
+
+
+export interface Visibility { signal: SignalId; threshold?: number }
+
+/**
+ * Whether a tile is suppressed right now.
+ *
+ * `showOnlyWhen` is checked first and wins: a tile that must appear during an
+ * incident should not also have to survive a hideWhen. An escalating rule
+ * overrides both, which is what keeps an alarm from being hidden by a filter
+ * the user set up on a calm day.
+ */
+export function isSuppressed(
+  hideWhen: Visibility[] | undefined,
+  showOnlyWhen: Visibility[] | undefined,
+  rules: Rule[] | undefined,
+  d: RuntimeData,
+): boolean {
+  const escalating = rules?.some(
+    (r) => r.escalate && signalActive(r.signal, r.threshold, d));
+  if (escalating) return false;
+  if (showOnlyWhen?.length) {
+    return !showOnlyWhen.some((v) => signalActive(v.signal, v.threshold, d));
+  }
+  if (hideWhen?.length) {
+    return hideWhen.some((v) => signalActive(v.signal, v.threshold, d));
+  }
+  return false;
 }

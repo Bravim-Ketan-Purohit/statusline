@@ -256,13 +256,13 @@ Sizes are rough: **S** < 1h · **M** 1–4h · **L** 4–12h · **XL** multi-day
 
 ### 6.1 `hideWhen`
 
-- [ ] **6.1.1** Reuse the rules engine — a `hideWhen` is a signal list, not a new expression language
-- [ ] **6.1.2** Add `hideWhen?: { signal: SignalId; threshold?: number }[]` to `TileSchema`
-- [ ] **6.1.3** Evaluate in `buildRow()` before rendering; skip the tile when any entry matches
-- [ ] **6.1.4** Invert form: `showOnlyWhen` — CI visible only when failing is the canonical case
-- [ ] **6.1.5** Builder UI in the inspector, next to the rules editor
-- [ ] **6.1.6** `keepEmpty` must still show hidden tiles in the builder, flagged "hidden here"
-- [ ] **6.1.7** Test: a tile with `showOnlyWhen: ci.failing` is absent on green and present on red
+- [x] **6.1.1** Reuse the rules engine — a `hideWhen` is a signal list, not a new expression language
+- [x] **6.1.2** Add `hideWhen?: { signal: SignalId; threshold?: number }[]` to `TileSchema`
+- [x] **6.1.3** Evaluate in `buildRow()` before rendering; skip the tile when any entry matches
+- [x] **6.1.4** Invert form: `showOnlyWhen` — CI visible only when failing is the canonical case
+- [x] **6.1.5** Builder UI in the inspector, next to the rules editor
+- [x] **6.1.6** `keepEmpty` must still show hidden tiles in the builder, flagged "hidden here"
+- [x] **6.1.7** Test: a tile with `showOnlyWhen: ci.failing` is absent on green and present on red
 
 ### 6.2 Rotation slots
 
@@ -274,10 +274,10 @@ Sizes are rough: **S** < 1h · **M** 1–4h · **L** 4–12h · **XL** multi-day
 
 ### 6.3 Alert escalation
 
-- [ ] **6.3.1** Partly covered by the rules engine; add `escalate: true` to a rule
-- [ ] **6.3.2** An escalating rule overrides `hideWhen` — an incident must not wait for a rotation slot
+- [x] **6.3.1** Partly covered by the rules engine; add `escalate: true` to a rule
+- [x] **6.3.2** An escalating rule overrides `hideWhen` — an incident must not wait for a rotation slot
 - [ ] **6.3.3** Optional terminal bell on first fire, debounced to once per state change
-- [ ] **6.3.4** Test: an escalating rule surfaces a tile that `hideWhen` would have hidden
+- [x] **6.3.4** Test: an escalating rule surfaces a tile that `hideWhen` would have hidden
 
 ---
 

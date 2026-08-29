@@ -20,7 +20,7 @@ export function DetailCallout({
   bpId: string;
   phase: number;
   fired?: string[];
-  measured: { width: number; ghost: boolean } | null;
+  measured: { width: number; ghost: boolean; suppressed?: boolean } | null;
   onChange: (next: Tile) => void;
   onDelete: () => void;
 }) {
@@ -118,8 +118,12 @@ export function DetailCallout({
           border={tile.style.border}
           rules={tile.style.rules}
           nerdFont={cfg.theme.font.nerdFont}
+          hideWhen={tile.style.hideWhen}
+          showOnlyWhen={tile.style.showOnlyWhen}
+          suppressed={measured?.suppressed}
           onBorder={(b) => setStyle({ border: b })}
           onRules={(r) => setStyle({ rules: r })}
+          onVisibility={(v) => setStyle(v)}
         />
 
         <div className="section-rule">Layer {bpId}</div>

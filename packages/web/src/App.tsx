@@ -74,7 +74,7 @@ export default function App() {
   const measured = useMemo(() => {
     for (const row of render.rows)
       for (const t of row.tiles)
-        if (t.tileId === selected) return { width: t.width, ghost: t.ghost, fired: t.effect?.fired ?? [] };
+        if (t.tileId === selected) return { width: t.width, ghost: t.ghost, suppressed: t.suppressed, fired: t.effect?.fired ?? [] };
     return null;
   }, [render, selected]);
 

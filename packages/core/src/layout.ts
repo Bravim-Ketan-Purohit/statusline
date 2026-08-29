@@ -3,7 +3,7 @@ import type { Span, RenderMode } from "./spans.js";
 import { span } from "./spans.js";
 import { displayWidth } from "./width.js";
 import { getTile } from "./tiles/registry.js";
-import { evaluateRules, EDGES, type ResolvedEffect } from "./rules.js";
+import { evaluateRules, isSuppressed, EDGES, type ResolvedEffect } from "./rules.js";
 import type { RuntimeData } from "./runtime.js";
 
 export interface ResolvedTile {
@@ -17,6 +17,8 @@ export interface ResolvedTile {
   effect: ResolvedEffect;
   /** true when the tile's data was absent and this is a builder placeholder */
   empty?: boolean;
+  /** true when hideWhen / showOnlyWhen removed it from the terminal */
+  suppressed?: boolean;
 }
 
 /** Pick the largest breakpoint whose minCols <= cols. */
@@ -60,6 +62,12 @@ export interface BuildOptions {
   /** wall clock, so a blink resolves identically in every target */
   nowMs?: number;
   /**
+   * Keep suppressed tiles, flagged. The terminal never wants this; the builder
+   * always does, or a tile you just set showOnlyWhen on would vanish from the
+   * canvas and become uneditable.
+   */
+  keepSuppressed?: boolean;
+  /**
    * Keep tiles whose render produced nothing, flagged `empty`. The terminal
    * never wants this -- a missing field must not draw a box. The builder
    * always does: a tile you just dropped has to be visible to be styled.
@@ -84,6 +92,10 @@ export function buildRow(
     if (!mod) continue; // unknown tile type -> skip, never crash the row
     const ov = effectiveOverride(tile, cfg.breakpoints, bp.id);
     if (ov.hidden) continue;
+    // All conditional behaviour lives under style, alongside `rules`.
+    const suppressed = isSuppressed(
+      tile.style.hideWhen, tile.style.showOnlyWhen, tile.style.rules, data);
+    if (suppressed && !buildOpts.keepSuppressed) continue;
     const mode: RenderMode = ov.compact ? "compact" : "full";
 
     let value: Span[];
@@ -116,6 +128,7 @@ export function buildRow(
       style,
       effect,
       empty,
+      suppressed,
     });
   }
   return out;
