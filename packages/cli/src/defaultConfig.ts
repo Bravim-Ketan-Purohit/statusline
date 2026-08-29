@@ -6,6 +6,7 @@ export const DEFAULT_CONFIG: Config = {
   meta: { name: "phase-1", cellWidth: 8.4 },
   theme: {
     terminalBg: "#16181c",
+    terminalGradient: null,
     palette: { accent: "#d78700", muted: "#6c6f85" },
     colorMode: "truecolor",
     font: { nerdFont: false },

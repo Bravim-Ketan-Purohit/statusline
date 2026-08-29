@@ -12,6 +12,8 @@ export interface ResolvedTile {
   priority: number;
   flex: boolean;
   style: TileStyle;
+  /** true when the tile's data was absent and this is a builder placeholder */
+  empty?: boolean;
 }
 
 /** Pick the largest breakpoint whose minCols <= cols. */
@@ -51,11 +53,21 @@ function decorate(style: TileStyle, value: Span[], mode: RenderMode): Span[] {
   return [...out, ...value];
 }
 
+export interface BuildOptions {
+  /**
+   * Keep tiles whose render produced nothing, flagged `empty`. The terminal
+   * never wants this -- a missing field must not draw a box. The builder
+   * always does: a tile you just dropped has to be visible to be styled.
+   */
+  keepEmpty?: boolean;
+}
+
 export function buildRow(
   cfg: Config,
   rowIndex: number,
   data: RuntimeData,
-  cols: number
+  cols: number,
+  buildOpts: BuildOptions = {}
 ): ResolvedTile[] {
   const row = cfg.rows[rowIndex];
   if (!row) return [];
@@ -75,10 +87,12 @@ export function buildRow(
     } catch {
       continue; // a throwing tile disappears; it never takes the row with it
     }
-    if (!value.length) continue; // missing field -> tile does not exist
+    const empty = value.length === 0;
+    if (empty && !buildOpts.keepEmpty) continue; // missing field -> no box
 
     const style: TileStyle = { ...tile.style, ...ov.style };
-    const spans = decorate(style, value, mode);
+    const shown = empty ? [span(mod.displayName)] : value;
+    const spans = decorate(style, shown, mode);
     out.push({
       tile,
       spans,
@@ -86,6 +100,7 @@ export function buildRow(
       priority: (tile.responsive as { priority?: number }).priority ?? 5,
       flex: tile.flex,
       style,
+      empty,
     });
   }
   return out;

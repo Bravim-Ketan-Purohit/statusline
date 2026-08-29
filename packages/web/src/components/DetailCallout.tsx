@@ -103,7 +103,8 @@ export function DetailCallout({
           <div className="swatch-row">
             <input id="d-grad" type="checkbox" checked={!!tile.style.gradient}
                    onChange={(e) => setStyle({ gradient: e.target.checked
-                     ? { from: tile.style.bg ?? "#005f87", to: "#5f0087" } : null })} />
+                     ? { from: tile.style.bg ?? "#005f87", to: "#5f0087", animated: false, speed: 0.25 }
+                     : null })} />
             {tile.style.gradient && (
               <>
                 <span className="swatch" style={{ background: tile.style.gradient.from }}>
@@ -118,6 +119,30 @@ export function DetailCallout({
             )}
           </div>
         </div>
+
+        {tile.style.gradient && (
+          <>
+            <div className="field-row">
+              <label htmlFor="d-anim">Flowing</label>
+              <input id="d-anim" type="checkbox" checked={tile.style.gradient.animated}
+                     onChange={(e) => setStyle({ gradient: { ...tile.style.gradient!, animated: e.target.checked } })} />
+            </div>
+            {tile.style.gradient.animated && (
+              <div className="field-row">
+                <label htmlFor="d-speed">Speed</label>
+                <input id="d-speed" type="range" min={0.05} max={2} step={0.05}
+                       value={tile.style.gradient.speed}
+                       onChange={(e) => setStyle({ gradient: { ...tile.style.gradient!, speed: Number(e.target.value) } })} />
+              </div>
+            )}
+            <div className="field-row">
+              <div className="cap-note">
+                <IconLocked size={13} />
+                <span>Flows smoothly here; a terminal only advances it once per redraw (1s floor).</span>
+              </div>
+            </div>
+          </>
+        )}
 
         <div className="section-rule">Layer {bpId}</div>
         <div className="field-row">

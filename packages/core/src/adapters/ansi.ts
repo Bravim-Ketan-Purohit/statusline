@@ -1,6 +1,7 @@
 import type { Span } from "../spans.js";
 import type { Config, TileStyle } from "../schema.js";
 import type { ResolvedTile } from "../layout.js";
+import { displayWidth } from "../width.js";
 
 const RESET = "\x1b[0m";
 
@@ -56,6 +57,16 @@ function sgr(hex: string, ground: "fg" | "bg", mode: Config["theme"]["colorMode"
   return i < 8 ? `\x1b[${base + i}m` : `\x1b[${base + 60 + (i - 8)}m`;
 }
 
+/**
+ * Phase for an animated gradient, from wall-clock time. Ping-pongs rather than
+ * wrapping, so the band travels back and forth instead of jumping at the seam.
+ */
+export function gradientPhase(speed: number, nowMs: number): number {
+  const cycle = (nowMs / 1000) * speed;
+  const t = cycle % 2;
+  return t <= 1 ? t : 2 - t;
+}
+
 /** Two-stop horizontal gradient across a tile's characters. */
 function gradientAt(from: string, to: string, t: number): string {
   const [r1, g1, b1] = hexToRgb(from);
@@ -70,6 +81,8 @@ export interface AnsiOptions {
   pad: number;
   /** columns between tiles */
   gap: number;
+  /** wall clock for animated gradients; defaults to now */
+  nowMs?: number;
 }
 
 export function renderTileAnsi(rt: ResolvedTile, cfg: Config, opts: AnsiOptions): string {
@@ -86,10 +99,14 @@ export function renderTileAnsi(rt: ResolvedTile, cfg: Config, opts: AnsiOptions)
     const from = resolveColor(grad.from, cfg)!;
     const to = resolveColor(grad.to, cfg)!;
     const total = rt.spans.reduce((n, s) => n + [...s.text].length, 0);
+    // An animated gradient shifts its ramp by the phase, so successive renders
+    // show the band in a new position.
+    const phase = grad.animated ? gradientPhase(grad.speed, opts.nowMs ?? Date.now()) : 0;
     let i = 0;
     for (const s of rt.spans) {
       for (const ch of s.text) {
-        const t = total > 1 ? i / (total - 1) : 0;
+        const base = total > 1 ? i / (total - 1) : 0;
+        const t = grad.animated ? Math.abs(((base + phase) % 2) - 1) : base;
         out += sgr(gradientAt(from, to, t), "fg", mode) + ch;
         i++;
       }
@@ -120,5 +137,60 @@ export function osc8(url: string, text: string): string {
 }
 
 export function renderRowAnsi(kept: ResolvedTile[], cfg: Config, opts: AnsiOptions): string {
-  return kept.map((t) => renderTileAnsi(t, cfg, opts)).join(" ".repeat(opts.gap));
+  const line = kept.map((t) => renderTileAnsi(t, cfg, opts)).join(" ".repeat(opts.gap));
+  const bg = cfg.theme.terminalGradient;
+  if (!bg) return line;
+  return paintGround(line, bg, cfg, opts);
+}
+
+/**
+ * Paint a flowing ground behind the whole row.
+ *
+ * A terminal has no layer to put a gradient on, so the ground is written as a
+ * background colour on every cell that does not already carry a tile's own
+ * background. Walking the emitted string means honouring the SGR state we just
+ * wrote rather than guessing at it.
+ */
+function paintGround(line: string, g: NonNullable<Config["theme"]["terminalGradient"]>,
+                     cfg: Config, opts: AnsiOptions): string {
+  const from = resolveColor(g.from, cfg) ?? "#000000";
+  const to = resolveColor(g.to, cfg) ?? "#000000";
+  const mode = cfg.theme.colorMode;
+  const phase = g.animated ? gradientPhase(g.speed, opts.nowMs ?? Date.now()) : 0;
+
+  const cells = displayWidth(line);
+  if (!cells) return line;
+
+  let out = "";
+  let col = 0;
+  let hasOwnBg = false;
+  let i = 0;
+  const groundAt = (c: number) => {
+    const base = cells > 1 ? c / (cells - 1) : 0;
+    const t = g.animated ? Math.abs(((base + phase) % 2) - 1) : base;
+    return sgr(gradientAt(from, to, t), "bg", mode);
+  };
+
+  while (i < line.length) {
+    if (line[i] === "\x1b") {
+      const m = /^\x1b\[[0-9;:]*m/.exec(line.slice(i));
+      if (m) {
+        const seq = m[0];
+        // Track whether a tile has set its own background.
+        if (/\[0m$/.test(seq)) hasOwnBg = false;
+        else if (/4[0-79]|48;/.test(seq)) hasOwnBg = true;
+        out += seq;
+        i += seq.length;
+        if (!hasOwnBg) out += groundAt(col);
+        continue;
+      }
+      const osc = /^\x1b\]8;[^\x07\x1b]*(?:\x07|\x1b\\)/.exec(line.slice(i));
+      if (osc) { out += osc[0]; i += osc[0].length; continue; }
+    }
+    if (col === 0 && !out) out += groundAt(0);
+    out += line[i];
+    col += displayWidth(line[i]!);
+    i++;
+  }
+  return out + RESET;
 }

@@ -17,7 +17,8 @@ const STYLE_OPTS: Record<string, AnsiOptions> = {
  */
 export function renderAnsi(cfg: Config, data: RuntimeData): string[] {
   const style = cfg.targets.claudeCode.style;
-  const opts = STYLE_OPTS[style] ?? STYLE_OPTS.pills!;
+  const base = STYLE_OPTS[style] ?? STYLE_OPTS.pills!;
+  const opts = { ...base, nowMs: (data.local.now ?? new Date()).getTime() };
   const cols = data.columns;
   const lines: string[] = [];
 

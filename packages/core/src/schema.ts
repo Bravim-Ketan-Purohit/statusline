@@ -5,7 +5,21 @@ export const CONFIG_VERSION = 1;
 const Hex = z.string().regex(/^#[0-9a-fA-F]{6}$/, "expected #rrggbb");
 const ColorRef = z.union([Hex, z.string().startsWith("palette:")]);
 
-export const GradientSchema = z.object({ from: ColorRef, to: ColorRef });
+export const GradientSchema = z.object({
+  from: ColorRef,
+  to: ColorRef,
+  /**
+   * A flowing gradient. The phase advances with wall-clock time, so the band
+   * travels across the tile on every render.
+   *
+   * In a terminal that means one step per render: Claude Code's refreshInterval
+   * floor is 1 second, so this is a slow pulse there, not a smooth flow. The
+   * web preview animates it properly. The capability matrix says so.
+   */
+  animated: z.boolean().default(false),
+  /** Cycles per second. 0.2 = one full traverse every five seconds. */
+  speed: z.number().min(0.01).max(4).default(0.25),
+});
 
 export const TileStyleSchema = z.object({
   bg: ColorRef.optional(),
@@ -68,6 +82,8 @@ export const ConfigSchema = z.object({
   theme: z
     .object({
       terminalBg: Hex.default("#16181c"),
+      /** Optional gradient behind the whole bar, same rules as a tile's. */
+      terminalGradient: GradientSchema.nullable().default(null),
       palette: z.record(Hex).default({}),
       colorMode: z.enum(["ansi16", "ansi256", "truecolor"]).default("truecolor"),
       font: z.object({ nerdFont: z.boolean().default(false) }).default({}),

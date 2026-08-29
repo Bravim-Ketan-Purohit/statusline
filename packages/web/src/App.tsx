@@ -1,4 +1,4 @@
-import { useCallback, useMemo, useRef, useState } from "react";
+import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import {
   parseConfig, renderWeb, resolveBreakpoint, type Config, type Tile,
 } from "@statusline/core";
@@ -8,7 +8,9 @@ import { applyBundle, makeTile, type Bundle } from "./lib/bundles";
 import { PRESETS, applyPreset, type Preset } from "./lib/themes";
 import { PartsList } from "./components/PartsList";
 import { DetailCallout } from "./components/DetailCallout";
-import { Specimen } from "./components/Specimen";
+import { Specimen, type DropTarget } from "./components/Specimen";
+import { SheetInspector } from "./components/SheetInspector";
+import { sampleData } from "./lib/sampleData";
 import { Dimension } from "./components/Dimension";
 import { Schedule } from "./components/Schedule";
 import { IconUndo, IconRedo, IconCopy, IconDownload, IconDimension } from "./components/Icons";
@@ -16,27 +18,15 @@ import { IconUndo, IconRedo, IconCopy, IconDownload, IconDimension } from "./com
 const PEN = ["--pen-xs", "--pen-sm", "--pen-md", "--pen-lg", "--pen-xl", "--pen-2xl"];
 const MIN_PX = 220, MAX_PX = 3840;   // 220px ~= 26 col, just under the xs layer
 
-/** Runtime data for the preview. Synthetic, and labelled as such in the title block. */
-const SPECIMEN_DATA = {
-  cc: {
-    session_id: "sheet-preview",
-    cwd: "/Users/you/dev/statusline",
-    workspace: { current_dir: "/Users/you/dev/statusline" },
-    model: { display_name: "Opus 5" },
-    effort: { level: "xhigh" },
-    context_window: { total_input_tokens: 226_000, context_window_size: 1_000_000, used_percentage: 23 },
-    rate_limits: { five_hour: { used_percentage: 39, resets_at: Date.now() / 1000 + 2520 } },
-  },
-  local: { now: new Date(), home: "/Users/you", gitBranch: "main", gitRoot: "/Users/you/dev/statusline" },
-  columns: 0,
-};
-
 export default function App() {
   const { config, setConfig, undo, redo, canUndo, canRedo } = useHistory(
     parseConfig(loadStored(DEFAULT_CONFIG))
   );
   const [px, setPx] = useState(1160);
   const [selected, setSelected] = useState<string | null>(null);
+  const [sheetSelected, setSheetSelected] = useState(false);
+  const [drop, setDrop] = useState<DropTarget | null>(null);
+  const [phase, setPhase] = useState(0);
   const [safety, setSafety] = useState(true);
   const [toast, setToast] = useState<string | null>(null);
   const dragging = useRef(false);
@@ -46,9 +36,29 @@ export default function App() {
   const bp = resolveBreakpoint(config.breakpoints, columns);
   const penVar = PEN[config.breakpoints.findIndex((b) => b.id === bp.id)] ?? "--pen-md";
 
+  // One clock for the whole sheet, so the sample data and any flowing
+  // gradient advance together. Only runs when something is actually animated.
+  const animating = useMemo(() => {
+    if (config.theme.terminalGradient?.animated) return true;
+    return config.rows.some((r) => r.tiles.some((t) => t.style.gradient?.animated));
+  }, [config]);
+
+  useEffect(() => {
+    if (!animating) { setPhase(0); return; }
+    let raf = 0, last = 0;
+    const speed = config.theme.terminalGradient?.speed ?? 0.25;
+    const tick = (ts: number) => {
+      if (ts - last > 33) { setPhase((ts / 1000) * speed); last = ts; }
+      raf = requestAnimationFrame(tick);
+    };
+    raf = requestAnimationFrame(tick);
+    return () => cancelAnimationFrame(raf);
+  }, [animating, config.theme.terminalGradient?.speed]);
+
+  const data = useMemo(() => sampleData(new Date()), []);
   const render = useMemo(
-    () => renderWeb(config, { ...SPECIMEN_DATA, columns }),
-    [config, columns]
+    () => renderWeb(config, { ...data, columns }),
+    [config, columns, data]
   );
 
   const flat = useMemo(() => config.rows.flatMap((r) => r.tiles), [config]);
@@ -62,13 +72,20 @@ export default function App() {
 
   const say = (m: string) => { setToast(m); window.setTimeout(() => setToast(null), 2200); };
 
-  const addTile = useCallback((type: string, rowIndex = 0) => {
+  /** Insert at an explicit slot so a drop lands where the caret showed it. */
+  const addTile = useCallback((type: string, at?: DropTarget) => {
+    const tile = makeTile(type, 5);
     setConfig((c) => {
-      const rows = c.rows.length ? [...c.rows] : [{ id: "row-1", tiles: [] }];
-      const i = Math.min(rowIndex, rows.length - 1);
-      rows[i] = { ...rows[i]!, tiles: [...rows[i]!.tiles, makeTile(type, rows[i]!.tiles.length + 1)] };
+      const rows = c.rows.length ? c.rows.map((r) => ({ ...r, tiles: [...r.tiles] }))
+                                 : [{ id: "row-1", tiles: [] }];
+      const ri = Math.min(Math.max(at?.row ?? 0, 0), rows.length - 1);
+      const idx = at ? Math.min(Math.max(at.index, 0), rows[ri]!.tiles.length) : rows[ri]!.tiles.length;
+      rows[ri]!.tiles.splice(idx, 0, tile);
       return { ...c, rows };
     });
+    setSelected(tile.id);
+    setSheetSelected(false);
+    return tile.id;
   }, [setConfig]);
 
   const updateTile = useCallback((next: Tile) => {
@@ -89,6 +106,26 @@ export default function App() {
     setSelected(null);
     say(`Applied ${b.name}${safety ? " with safety parts" : ""}.`);
   }, [safety, setConfig]);
+
+  /** Nearest slot to the pointer, so the caret lands where the eye expects. */
+  const slotAt = useCallback((clientX: number, clientY: number): DropTarget | null => {
+    const rows = [...document.querySelectorAll<HTMLElement>("[data-droprow]")];
+    if (!rows.length) return { row: 0, index: 0 };
+    let best = rows[0]!, bestDy = Infinity;
+    for (const r of rows) {
+      const b = r.getBoundingClientRect();
+      const dy = clientY < b.top ? b.top - clientY : clientY > b.bottom ? clientY - b.bottom : 0;
+      if (dy < bestDy) { bestDy = dy; best = r; }
+    }
+    const row = Number(best.dataset.droprow);
+    const tiles = [...best.querySelectorAll<HTMLElement>("[data-tile]")];
+    let index = tiles.length;
+    for (let i = 0; i < tiles.length; i++) {
+      const b = tiles[i]!.getBoundingClientRect();
+      if (clientX < b.left + b.width / 2) { index = i; break; }
+    }
+    return { row, index };
+  }, []);
 
   const startDrag = (e: React.PointerEvent) => {
     dragging.current = true;
@@ -175,19 +212,42 @@ export default function App() {
 
         <main
           className="field"
-          onDragOver={(e) => e.preventDefault()}
+          data-dragging={drop ? "true" : undefined}
+          onClick={(e) => {
+            // clicking the sheet itself, not a tile, opens the background pane
+            if (e.target === e.currentTarget) { setSelected(null); setSheetSelected(true); }
+          }}
+          onDragOver={(e) => {
+            e.preventDefault();
+            e.dataTransfer.dropEffect = "copy";
+            setDrop(slotAt(e.clientX, e.clientY));
+          }}
+          onDragLeave={(e) => {
+            if (!e.currentTarget.contains(e.relatedTarget as Node)) setDrop(null);
+          }}
           onDrop={(e) => {
-            const type = e.dataTransfer.getData("text/tile-type");
-            if (type) { addTile(type); say("Part added to the drawing."); }
+            e.preventDefault();
+            const type = e.dataTransfer.getData("text/tile-type") || e.dataTransfer.getData("text/plain");
+            const at = slotAt(e.clientX, e.clientY);
+            setDrop(null);
+            if (!type) return;
+            addTile(type, at ?? undefined);
+            say(`Added ${type}.`);
           }}
         >
           <div className="field-scroll">
             <div className="drawing" style={{ width: px }}>
               <Dimension columns={columns} px={px} />
-              <Specimen render={render} cfg={config} selected={selected} onSelect={setSelected} columns={columns} />
+              <Specimen
+                render={render} cfg={config} columns={columns} phase={phase} drop={drop}
+                selected={selected}
+                onSelect={(id) => { setSelected(id); setSheetSelected(false); }}
+                onSelectSheet={() => { setSelected(null); setSheetSelected(true); }}
+                onDropAt={setDrop}
+              />
             </div>
           </div>
-          <Schedule cfg={config} data={SPECIMEN_DATA} activeId={bp.id}
+          <Schedule cfg={config} data={data} activeId={bp.id}
                     onPick={(c) => setPx(Math.max(MIN_PX, Math.round(c * cell)))} />
           <div className="handle">
             <span className="handle-figure">{columns} col · {px} px · layer {bp.id}</span>
@@ -206,8 +266,10 @@ export default function App() {
           </div>
         </main>
 
-        <DetailCallout cfg={config} tile={selTile} bpId={bp.id} measured={measured}
-                       onChange={updateTile} onDelete={deleteTile} />
+        {sheetSelected || !selTile
+          ? <SheetInspector cfg={config} onChange={setConfig} />
+          : <DetailCallout cfg={config} tile={selTile} bpId={bp.id} measured={measured}
+                           onChange={updateTile} onDelete={deleteTile} />}
       </div>
 
       <footer className="title-block">

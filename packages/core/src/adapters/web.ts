@@ -24,14 +24,17 @@ export interface WebSpan {
 export interface WebTile {
   tileId: string;
   type: string;
+  rowIndex: number;
   spans: WebSpan[];
   width: number;
   priority: number;
   bg?: string;
   fg?: string;
-  gradient?: { from: string; to: string } | null;
+  gradient?: { from: string; to: string; animated: boolean; speed: number } | null;
   /** true when the layout solver dropped it at this width */
   ghost: boolean;
+  /** true when the tile has no data and this is a builder placeholder */
+  empty: boolean;
 }
 
 export interface WebRow {
@@ -98,7 +101,7 @@ function toWebSpan(s: Span, cfg: Config): WebSpan {
   };
 }
 
-function toWebTile(rt: ResolvedTile, cfg: Config, ghost: boolean): WebTile {
+function toWebTile(rt: ResolvedTile, cfg: Config, ghost: boolean, rowIndex: number): WebTile {
   const mode = cfg.theme.colorMode;
   const bg = resolveColor(rt.style.bg, cfg);
   const fg = resolveColor(rt.style.fg, cfg);
@@ -106,6 +109,7 @@ function toWebTile(rt: ResolvedTile, cfg: Config, ghost: boolean): WebTile {
   return {
     tileId: rt.tile.id,
     type: rt.tile.type,
+    rowIndex,
     spans: rt.spans.map((s) => toWebSpan(s, cfg)),
     width: rt.width,
     priority: rt.priority,
@@ -115,9 +119,12 @@ function toWebTile(rt: ResolvedTile, cfg: Config, ghost: boolean): WebTile {
       ? {
           from: quantize(resolveColor(g.from, cfg) ?? "#000000", mode),
           to: quantize(resolveColor(g.to, cfg) ?? "#000000", mode),
+          animated: g.animated,
+          speed: g.speed,
         }
       : null,
     ghost,
+    empty: rt.empty ?? false,
   };
 }
 
@@ -127,11 +134,12 @@ export function renderWeb(cfg: Config, data: RuntimeData): WebRender {
   const rows: WebRow[] = [];
 
   for (let i = 0; i < cfg.rows.length; i++) {
-    const built = buildRow(cfg, i, data, data.columns);
+    // keepEmpty: the canvas must show a tile even before it has data.
+    const built = buildRow(cfg, i, data, data.columns, { keepEmpty: true });
     const { kept, dropped, width } = fitRow(built, data.columns, opts.gap, opts.pad);
     // Preserve authored order, marking dropped tiles as ghosts in place.
     const keptIds = new Set(kept.map((t) => t.tile.id));
-    const tiles = built.map((t) => toWebTile(t, cfg, !keptIds.has(t.tile.id)));
+    const tiles = built.map((t) => toWebTile(t, cfg, !keptIds.has(t.tile.id), i));
     if (!tiles.length && !dropped.length) continue;
     rows.push({ rowId: cfg.rows[i]!.id, tiles, width });
   }

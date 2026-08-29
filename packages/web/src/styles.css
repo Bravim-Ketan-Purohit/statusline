@@ -716,3 +716,77 @@ input[type="checkbox"]:checked::after {
   flex: none;
 }
 @media (max-width: 1080px) { .tb-themes { flex: 1 0 100%; } }
+
+/* ===== builder affordances on the specimen ============================== */
+
+.slot { display: inline; position: relative; }
+
+/* A tile whose data is absent in this preview. It still occupies the sheet so
+   it can be selected and styled; the hatch says it will not draw in a real
+   terminal. */
+.spec-tile[data-empty="true"] {
+  opacity: 0.55;
+  outline: 1px dashed currentColor;
+  outline-offset: -1px;
+}
+
+/* Selection has to be unmistakable: the sheet's pen, not a subtle tint. */
+.spec-tile[data-selected="true"] {
+  box-shadow: 0 0 0 1px var(--sheet-deep), 0 0 0 3px var(--pen);
+  border-radius: 1px;
+}
+.spec-tile { transition: box-shadow 120ms var(--ease); }
+.spec-tile:hover { box-shadow: 0 0 0 1px var(--sheet-deep), 0 0 0 2px color-mix(in srgb, var(--pen) 55%, transparent); }
+
+/* Insertion caret: where a dropped part will land. */
+.drop-caret {
+  display: inline-block;
+  width: 0;
+  border-left: 2px solid var(--pen);
+  height: 1.25em;
+  margin: 0 -1px;
+  vertical-align: text-bottom;
+  animation: caret 900ms steps(2, jump-none) infinite;
+}
+@keyframes caret { 50% { opacity: 0.35; } }
+
+/* While a drag is over the field, the sheet says so once, quietly. */
+.field[data-dragging="true"] { background: color-mix(in srgb, var(--pen) 7%, var(--sheet-deep)); }
+.field[data-dragging="true"] .specimen { outline: 2px dashed var(--pen); outline-offset: 3px; }
+
+/* Parts are draggable: say so on hover, and lift on grab. */
+.part { transition: background 140ms var(--ease), transform 120ms var(--ease); }
+.part:active { transform: translateX(2px); }
+.part[draggable="true"]:hover { background: color-mix(in srgb, var(--pen) 12%, transparent); }
+
+/* Range inputs are a browser surface too. */
+input[type="range"] {
+  appearance: none;
+  width: 100%;
+  height: 18px;
+  background: transparent;
+  cursor: ew-resize;
+}
+input[type="range"]::-webkit-slider-runnable-track {
+  height: var(--w-hair);
+  background: var(--dim);
+}
+input[type="range"]::-webkit-slider-thumb {
+  appearance: none;
+  width: 10px; height: 16px;
+  margin-top: -8px;
+  background: var(--sheet);
+  border: var(--w-dim) solid var(--pen);
+}
+input[type="range"]::-moz-range-track { height: var(--w-hair); background: var(--dim); }
+input[type="range"]::-moz-range-thumb {
+  width: 10px; height: 16px; border-radius: 0;
+  background: var(--sheet); border: var(--w-dim) solid var(--pen);
+}
+
+.cap-note code {
+  font-family: var(--font-data);
+  font-size: 10.5px;
+  background: color-mix(in srgb, var(--rule) 30%, transparent);
+  padding: 0 3px;
+}
