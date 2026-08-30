@@ -3,7 +3,8 @@ import { readFileSync, existsSync } from "node:fs";
 import { homedir } from "node:os";
 import {
   parseConfig, safeParseConfig, renderAnsi, renderTmux,
-  type ClaudeStdin, type RuntimeData, type Config,
+  signalActive,
+  type ClaudeStdin, type RuntimeData, type Config, type SignalId,
 } from "@statusline/core";
 import { DEFAULT_CONFIG } from "./defaultConfig.js";
 import { findGitRoot, readBranch } from "./git.js";
@@ -12,6 +13,7 @@ import { getCached, spawnDetached } from "./cache.js";
 import { doRefresh, type GitData, type GhData, type CiData, type SkillsData } from "./producers.js";
 import { readPersonal, readSystem, readMedia } from "./local.js";
 import { readMetrics, metricsAreStale } from "./metrics.js";
+import { shouldRing } from "./bell.js";
 import { collectCustom, staleCustom, refreshCustom, toArgv } from "./custom.js";
 import { loadApprovals, approve, revokeAll, isApproved, hashArgv, APPROVALS_PATH } from "./approvals.js";
 import { setCredential, deleteCredential, listCredentialNames } from "./credentials.js";
@@ -111,12 +113,40 @@ function collect(cc: ClaudeStdin, columns: number, cfg: Config): RuntimeData {
 
 const cols = () => Number.parseInt(process.env.COLUMNS ?? "", 10) || 0;
 
+/** Which signals are firing anywhere in the config right now. */
+function buildFiring(cfg: Config, data: RuntimeData): SignalId[] {
+  const out: SignalId[] = [];
+  for (const row of cfg.rows) {
+    for (const t of row.tiles) {
+      for (const r of t.style.rules ?? []) {
+        if (signalActive(r.signal, r.threshold, data)) out.push(r.signal);
+      }
+    }
+  }
+  return out;
+}
+
 function cmdRender() {
   const cc = readStdin();
   const cfg = loadConfig();
-  const lines = renderAnsi(cfg, collect(cc, cols(), cfg));
+  const data = collect(cc, cols(), cfg);
+  const lines = renderAnsi(cfg, data);
   if (lines.length) process.stdout.write(lines.join("\n") + "\n");
   else process.stdout.write((cc.model?.display_name ?? "Claude") + "\n");
+
+  // Ring only on the transition into firing, so an alarm does not chime on
+  // every redraw. Written to stderr: stdout is the status line itself.
+  try {
+    const wants = cfg.rows.flatMap((r) => r.tiles)
+      .flatMap((t) => (t.style.rules ?? []).filter((x) => x.bell).map((x) => x.signal));
+    if (wants.length) {
+      const firing = [...new Set(
+        buildFiring(cfg, data).filter((sig) => wants.includes(sig)))];
+      // shouldRing must run even when nothing is firing, or the fall back to
+      // calm is never recorded and the next incident stays silent forever.
+      if (shouldRing(firing)) process.stderr.write("\u0007");
+    }
+  } catch { /* a bell is never worth failing a render for */ }
 }
 
 function cmdTmux() {

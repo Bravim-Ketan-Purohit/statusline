@@ -6,6 +6,7 @@ import { DEFAULT_CONFIG } from "./lib/defaultConfig";
 import { useHistory, loadStored } from "./lib/state";
 import { applyBundle, makeTile, type Bundle } from "./lib/bundles";
 import { PRESETS, applyPreset, type Preset } from "./lib/themes";
+import { TARGETS, type Target } from "@statusline/core";
 import { PartsList } from "./components/PartsList";
 import { DetailCallout } from "./components/DetailCallout";
 import { Specimen, type DropTarget } from "./components/Specimen";
@@ -28,6 +29,9 @@ export default function App() {
   const [drop, setDrop] = useState<DropTarget | null>(null);
   // `dragging` is already the width-handle ref; this one is the tile in flight.
   const [dragTile, setDragTile] = useState<string | null>(null);
+  // Which target the inspector greys controls against. Design decisions differ
+  // per target, so the builder has to know which one you are aiming at.
+  const [target, setTarget] = useState<Target>("claudeCode");
   const [phase, setPhase] = useState(0);
   const [safety, setSafety] = useState(true);
   const [toast, setToast] = useState<string | null>(null);
@@ -343,8 +347,8 @@ export default function App() {
         </main>
 
         {sheetSelected || !selTile
-          ? <SheetInspector cfg={config} phase={phase} onChange={setConfig} />
-          : <DetailCallout cfg={config} tile={selTile} bpId={bp.id} phase={phase}
+          ? <SheetInspector cfg={config} phase={phase} target={target} onChange={setConfig} />
+          : <DetailCallout cfg={config} tile={selTile} bpId={bp.id} phase={phase} target={target}
                            measured={measured} fired={measured?.fired}
                            onChange={updateTile} onDelete={deleteTile} />}
       </div>
@@ -372,6 +376,14 @@ export default function App() {
         </div>
         <div className="tb-cell"><span className="k">Parts</span><span className="v">{flat.length} drawn</span></div>
         <div className="tb-cell"><span className="k">Data</span><span className="v">synthetic</span></div>
+        <div className="tb-cell">
+          <span className="k">Target</span>
+          <select className="v" style={{ background: "none", border: 0, padding: 0 }}
+                  value={target} title={TARGETS.find((t) => t.id === target)?.note}
+                  onChange={(e) => setTarget(e.target.value as Target)}>
+            {TARGETS.map((t) => <option key={t.id} value={t.id}>{t.name}</option>)}
+          </select>
+        </div>
         <div className="tb-cell tb-themes">
           <span className="k">Theme</span>
           <span className="v theme-row">

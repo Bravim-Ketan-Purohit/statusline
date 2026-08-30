@@ -19,6 +19,8 @@ export interface ResolvedTile {
   empty?: boolean;
   /** true when hideWhen / showOnlyWhen removed it from the terminal */
   suppressed?: boolean;
+  /** true when a rotation slot is currently showing a sibling instead */
+  rotatedOut?: boolean;
 }
 
 /** Pick the largest breakpoint whose minCols <= cols. */
@@ -87,7 +89,20 @@ export function buildRow(
   const bp = resolveBreakpoint(cfg.breakpoints, cols);
   const out: ResolvedTile[] = [];
 
+  // Rotation: for each slot, only one of its tiles is eligible this tick.
+  const rotationHidden = new Set<string>();
+  for (const slot of row.rotation ?? []) {
+    const nowMs = buildOpts.nowMs ?? (data.local.now ?? new Date()).getTime();
+    const bucket =
+      slot.every === "day" ? Math.floor(nowMs / 86_400_000)
+      : slot.every === "hour" ? Math.floor(nowMs / 3_600_000)
+      : Math.floor(nowMs / 60_000);
+    const chosen = slot.tiles[Math.abs(bucket) % slot.tiles.length];
+    for (const id of slot.tiles) if (id !== chosen) rotationHidden.add(id);
+  }
+
   for (const tile of row.tiles) {
+    if (rotationHidden.has(tile.id) && !buildOpts.keepSuppressed) continue;
     const mod = getTile(tile.type);
     if (!mod) continue; // unknown tile type -> skip, never crash the row
     const ov = effectiveOverride(tile, cfg.breakpoints, bp.id);
@@ -128,7 +143,8 @@ export function buildRow(
       style,
       effect,
       empty,
-      suppressed,
+      suppressed: suppressed || rotationHidden.has(tile.id),
+      rotatedOut: rotationHidden.has(tile.id),
     });
   }
   return out;

@@ -1,5 +1,6 @@
 import type { Config } from "@statusline/core";
 import { IconLocked } from "./Icons";
+import { canDo, type Target } from "@statusline/core";
 import { FillEditor } from "./FillEditor";
 
 /**
@@ -7,8 +8,8 @@ import { FillEditor } from "./FillEditor";
  * than a tile. Everything here paints behind the whole bar.
  */
 export function SheetInspector({
-  cfg, phase, onChange,
-}: { cfg: Config; phase: number; onChange: (next: Config) => void }) {
+  cfg, phase, target, onChange,
+}: { cfg: Config; phase: number; target: Target; onChange: (next: Config) => void }) {
   const th = cfg.theme;
   const g = th.terminalGradient;
   const setTheme = (patch: Partial<Config["theme"]>) =>
@@ -37,6 +38,20 @@ export function SheetInspector({
 
         <FillEditor fill={th.terminalFill} phase={phase} scope="sheet"
                     onChange={(f) => setTheme({ terminalFill: f })} />
+
+        <div className="section-rule">On this target</div>
+        {(["animatedFill", "imageFill", "multiRow", "osc8Link", "overline"] as const).map((f) => {
+          const v = canDo(target, f, cfg);
+          return (
+            <div className="field-row" key={f}>
+              <label style={{ textTransform: "none", letterSpacing: 0 }}>{f}</label>
+              <span className="cap-verdict" data-ok={v.ok}>
+                {v.ok ? (v.reason ? "yes, with a caveat" : "yes") : "no"}
+              </span>
+              {v.reason && <div className="cap-note" style={{ gridColumn: "1 / -1" }}><span>{v.reason}</span></div>}
+            </div>
+          );
+        })}
 
         <div className="section-rule">Colour mode</div>
         <div className="field-row">

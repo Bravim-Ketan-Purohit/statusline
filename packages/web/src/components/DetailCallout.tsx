@@ -1,5 +1,5 @@
 import type { Config, Tile } from "@statusline/core";
-import { getTile } from "@statusline/core";
+import { getTile, canDo, type Target } from "@statusline/core";
 import { IconLocked, IconTrash } from "./Icons";
 import { FillEditor } from "./FillEditor";
 import { RulesEditor } from "./RulesEditor";
@@ -13,12 +13,13 @@ import { RulesEditor } from "./RulesEditor";
 type Tri = "inherit" | "on" | "off";
 
 export function DetailCallout({
-  cfg, tile, bpId, phase, measured, fired, onChange, onDelete,
+  cfg, tile, bpId, phase, target, measured, fired, onChange, onDelete,
 }: {
   cfg: Config;
   tile: Tile | null;
   bpId: string;
   phase: number;
+  target: Target;
   fired?: string[];
   measured: { width: number; ghost: boolean; suppressed?: boolean } | null;
   onChange: (next: Tile) => void;
@@ -51,8 +52,8 @@ export function DetailCallout({
   const setStyle = (patch: Partial<Tile["style"]>) =>
     onChange({ ...tile, style: { ...tile.style, ...patch } });
 
-  // Claude Code captures stdout; only tmux can dispatch a command from a click.
-  const tmuxOn = cfg.targets.tmux.enabled;
+  // The matrix is the single source of truth for what a target can honour.
+  const clickCap = canDo(target, "click", cfg);
   const actionBytes = new TextEncoder().encode(tile.action ?? "").length;
 
   return (
@@ -154,17 +155,15 @@ export function DetailCallout({
         <div className="section-rule">Action</div>
         <div className="field-row">
           <label htmlFor="d-action">Action id</label>
-          <input id="d-action" type="text" value={tile.action ?? ""} disabled={!tmuxOn}
-                 placeholder={tmuxOn ? "play_pause" : "tmux target off"}
+          <input id="d-action" type="text" value={tile.action ?? ""} disabled={!clickCap.ok}
+                 placeholder={clickCap.ok ? "play_pause" : "unavailable on this target"}
                  onChange={(e) => onChange({ ...tile, action: e.target.value || null })} />
         </div>
         <div className="field-row">
           <div className="cap-note">
             <IconLocked size={13} />
             <span>
-              {!tmuxOn
-                ? "Claude Code captures stdout, so a click can only open an OSC 8 link there. Enable the tmux target to dispatch a command."
-                : `tmux passes this through range=user, capped at 15 bytes. ${actionBytes}/15 used.`}
+              {clickCap.reason ?? `Passed through range=user, capped at 15 bytes. ${actionBytes}/15 used.`}
             </span>
           </div>
         </div>

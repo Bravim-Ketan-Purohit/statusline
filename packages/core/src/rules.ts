@@ -175,6 +175,8 @@ export interface Rule {
   threshold?: number;
   /** Overrides hideWhen while firing: an incident must never be filtered away. */
   escalate?: boolean;
+  /** Ring the terminal bell on the transition into firing, not every render. */
+  bell?: boolean;
   fg?: string;
   bg?: string;
   border?: Border;
@@ -182,6 +184,8 @@ export interface Rule {
 }
 
 export interface ResolvedEffect {
+  /** signals that want a bell; the host debounces on state change */
+  bellFor?: SignalId[];
   fg?: string;
   bg?: string;
   border?: Border;
@@ -212,6 +216,7 @@ export function evaluateRules(rules: Rule[] | undefined, d: RuntimeData, nowMs: 
     if (r.fg) out.fg = r.fg;
     if (r.bg) out.bg = r.bg;
     if (r.border) out.border = r.border;
+    if (r.bell) (out.bellFor ??= []).push(r.signal);
     if (r.blink && blinkOn(r.blink.hz, nowMs)) {
       out.blinkColor = r.blink.color;
       out.blinkTarget = r.blink.target;

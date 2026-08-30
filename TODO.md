@@ -215,12 +215,12 @@ Sizes are rough: **S** < 1h · **M** 1–4h · **L** 4–12h · **XL** multi-day
 
 ### 4.4 Systematic capability matrix
 
-- [ ] **4.4.1** Create `core/src/capabilities.ts`: `canDo(target, feature, cfg) -> {ok, reason}`
-- [ ] **4.4.2** Enumerate features: `click`, `osc8Link`, `overline`, `underlineColor`, `truecolor`, `nerdFontGlyph`, `imageFill`
-- [ ] **4.4.3** Add a target switcher to the builder (Claude Code / tmux / web)
-- [ ] **4.4.4** Grey any control the active target cannot honour, with `reason` as the tooltip
-- [ ] **4.4.5** Replace the ad-hoc `cap-note` blocks with generated ones where they overlap
-- [ ] **4.4.6** Test: switching target to Claude Code disables the action-id field with the right reason
+- [x] **4.4.1** Create `core/src/capabilities.ts`: `canDo(target, feature, cfg) -> {ok, reason}`
+- [x] **4.4.2** Enumerate features: `click`, `osc8Link`, `overline`, `underlineColor`, `truecolor`, `nerdFontGlyph`, `imageFill`
+- [x] **4.4.3** Add a target switcher to the builder (Claude Code / tmux / web)
+- [x] **4.4.4** Grey any control the active target cannot honour, with `reason` as the tooltip
+- [x] **4.4.5** Replace the ad-hoc `cap-note` blocks with generated ones where they overlap
+- [x] **4.4.6** Test: switching target to Claude Code disables the action-id field with the right reason
 
 ---
 
@@ -266,17 +266,17 @@ Sizes are rough: **S** < 1h · **M** 1–4h · **L** 4–12h · **XL** multi-day
 
 ### 6.2 Rotation slots
 
-- [ ] **6.2.1** Add `rotation?: { tiles: string[]; every: "message" | "minute" | "hour" }` to `RowSchema`
-- [ ] **6.2.2** Seed on the time bucket, never randomly — same rule as the verse
-- [ ] **6.2.3** Render exactly one of the rotating tiles per slot
-- [ ] **6.2.4** Builder: a slot renders as a stack with a cycle indicator
-- [ ] **6.2.5** Test: the same bucket always picks the same tile
+- [x] **6.2.1** Add `rotation?: { tiles: string[]; every: "message" | "minute" | "hour" }` to `RowSchema`
+- [x] **6.2.2** Seed on the time bucket, never randomly — same rule as the verse
+- [x] **6.2.3** Render exactly one of the rotating tiles per slot
+- [x] **6.2.4** Builder: a slot renders as a stack with a cycle indicator
+- [x] **6.2.5** Test: the same bucket always picks the same tile
 
 ### 6.3 Alert escalation
 
 - [x] **6.3.1** Partly covered by the rules engine; add `escalate: true` to a rule
 - [x] **6.3.2** An escalating rule overrides `hideWhen` — an incident must not wait for a rotation slot
-- [ ] **6.3.3** Optional terminal bell on first fire, debounced to once per state change
+- [x] **6.3.3** Optional terminal bell on first fire, debounced to once per state change
 - [x] **6.3.4** Test: an escalating rule surfaces a tile that `hideWhen` would have hidden
 
 ---

@@ -919,3 +919,10 @@ input[type="range"]::-moz-range-thumb {
   background-image:repeating-linear-gradient(45deg,
     transparent 0 3px, color-mix(in srgb, currentColor 30%, transparent) 3px 4px);
 }
+
+.cap-verdict{
+  font-family:var(--font-data); font-size:11px;
+  border:var(--w-hair) solid var(--rule); padding:1px 6px;
+}
+.cap-verdict[data-ok="true"]{ color:var(--ink-2); }
+.cap-verdict[data-ok="false"]{ color:var(--pen-xs); border-color:var(--pen-xs); }

@@ -80,6 +80,8 @@ export const RuleSchema = z.object({
   threshold: z.number().optional(),
   /** While firing, this rule overrides hideWhen and showOnlyWhen. */
   escalate: z.boolean().optional(),
+  /** Ring the bell once when this starts firing. Never on every render. */
+  bell: z.boolean().optional(),
   fg: ColorRef.optional(),
   bg: ColorRef.optional(),
   border: BorderSchema.optional(),
@@ -150,6 +152,15 @@ export const TileSchema = z.object({
 export const RowSchema = z.object({
   id: z.string().min(1),
   tiles: z.array(TileSchema).default([]),
+  /**
+   * Rotation slots. Each slot names tile ids that share one position; exactly
+   * one shows at a time, picked from the clock bucket so it never flickers.
+   * Several low-priority tiles then cost one tile's worth of columns.
+   */
+  rotation: z.array(z.object({
+    tiles: z.array(z.string()).min(2).max(8),
+    every: z.enum(["minute", "hour", "day"]).default("minute"),
+  })).max(4).optional(),
 }).refine((r) => r.tiles.filter((t) => t.flex).length <= 1, {
   message: "a row may mark at most one tile flex; two would each claim the same slack",
   path: ["tiles"],
