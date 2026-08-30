@@ -27,8 +27,13 @@ const NEEDS: Record<string, string> = {
 };
 const METRIC_TILES = new Set(["cpu", "memory", "swap", "disk", "load", "network", "gpu", "vram"]);
 
-export function diagnose(): Finding[] {
+export function diagnose(widgetErrors: { file: string; message: string }[] = []): Finding[] {
   const f: Finding[] = [];
+
+  // A malformed manifest must never blank the bar, so it is reported here
+  // rather than thrown at load.
+  for (const e of widgetErrors)
+    f.push({ level: "fail", what: `widget ${e.file} failed to load`, fix: e.message });
 
   // --- config ---
   if (!existsSync(CONFIG_PATH)) {
@@ -159,8 +164,8 @@ function diagnoseConfig(cfg: Config): Finding[] {
   return f;
 }
 
-export function cmdDoctor(): number {
-  const findings = diagnose();
+export function cmdDoctor(widgetErrors: { file: string; message: string }[] = []): number {
+  const findings = diagnose(widgetErrors);
   for (const x of findings) {
     process.stdout.write(`[${MARK[x.level]}] ${x.what}\n`);
     if (x.fix) process.stdout.write(`          ${x.fix}\n`);

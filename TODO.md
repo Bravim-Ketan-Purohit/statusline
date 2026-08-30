@@ -301,15 +301,15 @@ Sizes are rough: **S** < 1h · **M** 1–4h · **L** 4–12h · **XL** multi-day
 > change. Only worth building once EPIC 5 has three or four real integrations
 > to generalise from. **Do not start this before then.**
 
-- [ ] **8.1** Design the manifest schema (JSON Schema + Zod), modelled on the real producers from EPIC 5
-- [ ] **8.2** `fetch.type: http` — url, method, headers, body, credential refs
-- [ ] **8.3** `fetch.type: command` — argv array only, no shell interpolation
-- [ ] **8.4** `extract` — JSONPath subset; write the evaluator, do not pull a dependency
-- [ ] **8.5** `render` — `full` / `compact` templates with `{{var}}` substitution
-- [ ] **8.6** `hideWhen` expression, reusing EPIC 6
-- [ ] **8.7** Loader: read `~/.config/statusline/widgets/*.yaml`, validate, register as tiles at runtime
-- [ ] **8.8** Validation errors must name the file and line, and must not blank the bar
-- [ ] **8.9** Builder shows manifest widgets alongside built-ins, visually distinguished
+- [x] **8.1** Design the manifest schema (JSON Schema + Zod), modelled on the real producers from EPIC 5
+- [x] **8.2** `fetch.type: http` — url, method, headers, body, credential refs
+- [x] **8.3** `fetch.type: command` — argv array only, no shell interpolation
+- [x] **8.4** `extract` — JSONPath subset; write the evaluator, do not pull a dependency
+- [x] **8.5** `render` — `full` / `compact` templates with `{{var}}` substitution
+- [x] **8.6** `hideWhen` expression, reusing EPIC 6
+- [x] **8.7** Loader: read `~/.config/statusline/widgets/*.yaml`, validate, register as tiles at runtime
+- [x] **8.8** Validation errors must name the file and line, and must not blank the bar
+- [x] **8.9** Builder shows manifest widgets alongside built-ins, visually distinguished
 
 ---
 
@@ -319,13 +319,13 @@ Sizes are rough: **S** < 1h · **M** 1–4h · **L** 4–12h · **XL** multi-day
 > at developer machines. Not worth building until strangers actually want to
 > submit widgets.
 
-- [ ] **9.1** Public repo layout, one YAML per widget by category
-- [ ] **9.2** `statusline search <term>` / `statusline add <id>`
-- [ ] **9.3** `add` prompts for declared credentials instead of failing silently
-- [ ] **9.4** **Security gate**: community submissions are `fetch.type: http` only by default
-- [ ] **9.5** `type: command` requires explicit confirmation at install, showing the exact argv
-- [ ] **9.6** Never allow shell-string interpolation anywhere in a manifest
-- [ ] **9.7** Builder reads the registry index and marks community widgets
+- [x] **9.1** Public repo layout, one YAML per widget by category
+- [x] **9.2** `statusline search <term>` / `statusline add <id>`
+- [x] **9.3** `add` prompts for declared credentials instead of failing silently
+- [x] **9.4** **Security gate**: community submissions are `fetch.type: http` only by default
+- [x] **9.5** `type: command` requires explicit confirmation at install, showing the exact argv
+- [x] **9.6** Never allow shell-string interpolation anywhere in a manifest
+- [x] **9.7** Builder reads the registry index and marks community widgets
 
 ---
 

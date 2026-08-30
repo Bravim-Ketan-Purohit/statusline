@@ -3,6 +3,7 @@ export * from "./fill.js";
 export * from "./rules.js";
 export * from "./danger.js";
 export * from "./capabilities.js";
+export * from "./manifest.js";
 export * from "./spans.js";
 export * from "./runtime.js";
 export * from "./width.js";

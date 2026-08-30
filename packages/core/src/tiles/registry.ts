@@ -58,7 +58,21 @@ const MODULES: TileModule<any>[] = [
   textTile, spacerTile, separatorTile, commandTile, bandTile,
 ];
 
+/**
+ * Mutable on purpose: declarative widgets register themselves at load time.
+ * A manifest may never replace a built-in, which the loader enforces.
+ */
 export const registry = new Map<string, TileModule<any>>(MODULES.map((m) => [m.id, m]));
+
+/**
+ * The built-in ids, captured before any manifest registers.
+ *
+ * A collision check against `registry` itself is wrong: once a manifest has
+ * registered, it collides with its own entry, and every later load rejects it.
+ * That failed only in the bundled binary, where load and refresh share a
+ * process.
+ */
+export const BUILTIN_IDS: ReadonlySet<string> = new Set(MODULES.map((m) => m.id));
 export const allTiles = () => [...registry.values()];
 export const getTile = (id: string) => registry.get(id);
 export type { TileModule, Capability } from "./types.js";

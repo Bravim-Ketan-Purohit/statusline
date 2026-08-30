@@ -19,6 +19,11 @@ import { readMetrics, metricsAreStale } from "./metrics.js";
 import { shouldRing } from "./bell.js";
 import { cmdDoctor } from "./doctor.js";
 import { findDrill, runDrill, popupCommand } from "./drill.js";
+import {
+  loadWidgets, registerWidgets, collectWidgets, staleWidgets, refreshWidget,
+  ensureWidgetsDir, WIDGETS_DIR,
+} from "./widgets.js";
+import { cmdSearch, cmdAdd } from "./registryCmd.js";
 import { collectCustom, staleCustom, refreshCustom, toArgv } from "./custom.js";
 import { loadApprovals, approve, revokeAll, isApproved, hashArgv, APPROVALS_PATH } from "./approvals.js";
 import { setCredential, deleteCredential, listCredentialNames } from "./credentials.js";
@@ -29,6 +34,12 @@ import { startDaemon, loadOrCreateToken, actionUrl } from "./daemon.js";
 import { printTmuxConf } from "./tmuxconf.js";
 
 const TTL = { git: 4_000, gh: 180_000, ci: 180_000, skills: 240_000 };
+
+/** Manifests register as tiles before anything reads the registry. */
+const WIDGETS = (() => {
+  try { const r = loadWidgets(); registerWidgets(r.loaded); return r; }
+  catch { return { loaded: [], errors: [] }; }
+})();
 
 function loadConfig(): Config {
   if (!existsSync(CONFIG_PATH)) return parseConfig(DEFAULT_CONFIG);
@@ -87,6 +98,12 @@ function collect(cc: ClaudeStdin, columns: number, cfg: Config): RuntimeData {
     }))
     .filter((c) => c.command);
   const custom: Record<string, string> = cmdTiles.length ? collectCustom(cmdTiles) : {};
+  // Declarative widgets: read what is cached, refresh what is stale.
+  if (WIDGETS.loaded.length) {
+    const inUse = WIDGETS.loaded.filter((m) => used.has(m.id));
+    Object.assign(custom, collectWidgets(inUse));
+    for (const id of staleWidgets(inUse)) spawnDetached(["--refresh-widget", id]);
+  }
   // Safety tiles need the theme's patterns, which do not live on RuntimeData.
   custom["__danger"] = JSON.stringify(cfg.theme.dangerPatterns);
   custom["__protected"] = JSON.stringify(cfg.theme.protectedBranches);
@@ -203,6 +220,9 @@ const HELP = `statusline — one design, three render targets
   action-url <id>        print the daemon URL for an action (needs a token)
   tiles                  list every available tile
   doctor                 report what is misconfigured, and how to fix it
+  widgets                list declarative widget manifests and their errors
+  search [term]          search the widget registry
+  add <id> [--yes]       install a registry widget (http-only; shows it first)
   --version
 `;
 
@@ -212,6 +232,7 @@ async function main() {
 
   if (cmd === "--refresh") { doRefresh(argv[1]!, argv[2]!); return; }
   if (cmd === "--refresh-cmd") { refreshCustom(argv[1]!, Number(argv[2]) || 0); return; }
+  if (cmd === "--refresh-widget") { refreshWidget(argv[1]!); return; }
 
   try {
     switch (cmd) {
@@ -238,7 +259,22 @@ async function main() {
         return;
       }
       case "export": { process.exitCode = cmdExport(); return; }
-      case "doctor": { process.exitCode = cmdDoctor(); return; }
+      case "doctor": { process.exitCode = cmdDoctor(WIDGETS.errors); return; }
+      case "search": { process.exitCode = cmdSearch(argv[1]); return; }
+      case "add": { process.exitCode = cmdAdd(argv[1], argv.includes("--yes")); return; }
+      case "widgets": {
+        ensureWidgetsDir();
+        process.stdout.write(`${WIDGETS_DIR}\n\n`);
+        if (!WIDGETS.loaded.length && !WIDGETS.errors.length) {
+          process.stdout.write("no widget manifests yet\n");
+          return;
+        }
+        for (const m of WIDGETS.loaded)
+          process.stdout.write(`  ok    ${m.id.padEnd(24)} ${m.name} (${m.fetch.type}, cache ${m.cache}s)\n`);
+        for (const e of WIDGETS.errors)
+          process.stdout.write(`  error ${e.file.padEnd(24)} ${e.message}\n`);
+        return;
+      }
       case "click": {
         // One binding for both meanings: "d:<id>" drills, anything else acts.
         const raw = (argv[1] ?? "").trim();
