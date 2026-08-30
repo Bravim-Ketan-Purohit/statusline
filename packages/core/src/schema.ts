@@ -140,6 +140,21 @@ export const TileSchema = z.object({
     }),
   flex: z.boolean().default(false),
   /**
+   * Clicking the tile in tmux opens a popup running this command. An argv
+   * array, never a shell string -- a config can arrive from a pasted blob, so
+   * the same reasoning as custom commands applies, and the same approval gate.
+   *
+   * `id` is what tmux passes back through #{mouse_status_range}, so it carries
+   * the same 15-byte cap as `action`.
+   */
+  drill: z.object({
+    id: z.string().min(1).refine((v) => Buffer.byteLength(v, "utf8") <= 15, {
+      message: "drill id must be <= 15 bytes (tmux range=user| limit)",
+    }),
+    command: z.array(z.string().min(1)).min(1).max(24),
+    title: z.string().optional(),
+  }).nullable().default(null),
+  /**
    * `priority` sits alongside breakpoint-id keys, so the catchall has to
    * admit both shapes. effectiveOverride() ignores anything non-object.
    */

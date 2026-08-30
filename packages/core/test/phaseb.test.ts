@@ -92,3 +92,36 @@ test("a bell rule reports itself for the host to debounce", () => {
     { ...d, cc: { context_window: { used_percentage: 10 } } }, 0);
   assert.equal(quiet.bellFor, undefined, "a rule that is not firing wants no bell");
 });
+
+// --- drill ------------------------------------------------------------------
+
+test("a drill id carries the same 15-byte cap as an action", async () => {
+  const { TileSchema } = await import("../src/schema.js");
+  const mk = (id: string) => TileSchema.safeParse({ id: "a", type: "clock", drill: { id, command: ["ls"] } });
+  assert.ok(mk("gitlog").success);
+  assert.ok(mk("x".repeat(15)).success);
+  assert.ok(!mk("x".repeat(16)).success, "tmux truncates past 15 bytes");
+});
+
+test("a drill emits a d: range so one binding can route both kinds", async () => {
+  const { renderTmux } = await import("../src/render.js");
+  const cfg2 = parseConfig({
+    version: 2, breakpoints: [{ id: "xs", minCols: 0 }],
+    rows: [{ id: "r", tiles: [
+      { id: "b", type: "text", props: { text: "log" }, drill: { id: "gitlog", command: ["git", "log"] } },
+      { id: "p", type: "media-play", action: "play_pause" },
+    ]}],
+  });
+  const out = renderTmux(cfg2, { cc: {}, local: {}, columns: 200 });
+  assert.match(out, /range=user\|d:gitlog/);
+  assert.match(out, /range=user\|play_pause/);
+});
+
+test("a drill command must be an argv array, never a shell string", async () => {
+  const { TileSchema } = await import("../src/schema.js");
+  assert.ok(!TileSchema.safeParse({ id: "a", type: "clock",
+    drill: { id: "x", command: "git log; rm -rf /" } }).success,
+    "a bare string must be rejected by the schema");
+  assert.ok(TileSchema.safeParse({ id: "a", type: "clock",
+    drill: { id: "x", command: ["git", "log"] } }).success);
+});

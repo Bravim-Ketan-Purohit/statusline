@@ -283,14 +283,15 @@ Sizes are rough: **S** < 1h · **M** 1–4h · **L** 4–12h · **XL** multi-day
 
 ## EPIC 7 — Drill-down  ·  size M  ·  tmux only
 
-- [ ] **7.1** Add `drill?: { command: string[] }` to `TileSchema` — argv array, never a shell string
-- [ ] **7.2** `statusline view <tileId>` reads the config and runs the drill command
-- [ ] **7.3** Extend the generated `.tmux.conf`: `MouseDown1Status` distinguishes an action id from a drill id
-- [ ] **7.4** Emit `tmux display-popup -E -w 80% -h 80% "statusline view <id>"`
-- [ ] **7.5** Right-click via `display-menu`: copy value, open in browser, refresh now, hide widget
-- [ ] **7.6** 15-byte cap applies to drill ids too — validate in the schema
-- [ ] **7.7** Claude Code cannot do this. State it in the capability matrix rather than half-building it.
-- [ ] **7.8** Manual verification in a real tmux session — this cannot be unit tested
+- [x] **7.1** Add `drill?: { command: string[] }` to `TileSchema` — argv array, never a shell string
+- [x] **7.2** `statusline view <tileId>` reads the config and runs the drill command
+- [x] **7.3** Extend the generated `.tmux.conf`: `MouseDown1Status` distinguishes an action id from a drill id
+- [x] **7.4** Emit `tmux display-popup -E -w 80% -h 80% "statusline view <id>"`
+- [x] **7.5** Right-click via `display-menu`: copy value, open in browser, refresh now, hide widget
+- [x] **7.6** 15-byte cap applies to drill ids too — validate in the schema
+- [x] **7.7** Claude Code cannot do this. State it in the capability matrix rather than half-building it.
+- [~] **7.8** Manual verification in a real tmux session — the bar renders and the bindings
+  are registered in a live client; the physical click itself still needs a human (see 10.2.3)
 
 ---
 
@@ -332,13 +333,13 @@ Sizes are rough: **S** < 1h · **M** 1–4h · **L** 4–12h · **XL** multi-day
 
 ### 10.1 Bundles (5 of 10 shipped)
 
-- [ ] **10.1.1** Add SRE / on-call, Indie hacker, Data engineer, Mobile dev, Safety
-- [ ] **10.1.2** Several depend on EPIC 5 tiles — mark them unavailable until then rather than shipping empty
+- [x] **10.1.1** Add SRE / on-call, Indie hacker, Data engineer, Mobile dev, Safety
+- [x] **10.1.2** Several depend on EPIC 5 tiles — mark them unavailable until then rather than shipping empty
 
 ### 10.2 tmux polish
 
 - [x] **10.2.1** `status-left` path verified: the snippet emits `status-left` and `status-left-length`
-- [ ] **10.2.2** Right-alignment within the render once `flex` lands (3.1)
+- [x] **10.2.2** Right-alignment within the render once `flex` lands (3.1)
 - [~] **10.2.3** Click round-trip, partially proven. In a real attached tmux 3.7c client the
   bar renders with colours and glyphs, the `range=user|play_pause` markers survive, the
   `MouseDown1Status` binding is registered, `mouse on` is set, and `statusline action
@@ -349,16 +350,16 @@ Sizes are rough: **S** < 1h · **M** 1–4h · **L** 4–12h · **XL** multi-day
 
 ### 10.3 `statusline doctor`
 
-- [ ] **10.3.1** Report: config validity, which credentials are missing, whether the daemon is up, cache freshness
-- [ ] **10.3.2** Report tiles in the config whose data source is unreachable
-- [ ] **10.3.3** Suggest the fix for each, one line per finding
+- [x] **10.3.1** Report: config validity, which credentials are missing, whether the daemon is up, cache freshness
+- [x] **10.3.2** Report tiles in the config whose data source is unreachable
+- [x] **10.3.3** Suggest the fix for each, one line per finding
 
 ### 10.4 Documentation
 
-- [ ] **10.4.1** `CONTRIBUTING.md` — how to add a tile (one file plus one registry line)
-- [ ] **10.4.2** Document the fill mode set with a rendered example of each
-- [ ] **10.4.3** Document the signal set for rules
-- [ ] **10.4.4** Re-run the documenter after EPIC 1–4 land, since DESIGN.md describes the built world
+- [x] **10.4.1** `CONTRIBUTING.md` — how to add a tile (one file plus one registry line)
+- [x] **10.4.2** Document the fill mode set with a rendered example of each
+- [x] **10.4.3** Document the signal set for rules
+- [x] **10.4.4** Re-run the documenter after EPIC 1–4 land, since DESIGN.md describes the built world
 
 ---
 

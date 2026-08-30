@@ -42,8 +42,9 @@ export function renderTileTmux(rt: ResolvedTile, cfg: Config, pad: number): stri
   const padStr = " ".repeat(pad);
   const body = rt.spans.map((s) => spanTmux(s, cfg, base)).join("");
   const inner = `${base}${padStr}${body}${base}${padStr}#[default]`;
-  const action = rt.tile.action;
-  return action ? `#[range=user|${action}]${inner}#[norange]` : inner;
+  // A tile may carry an action or a drill, never both -- one click, one meaning.
+  const range = rt.tile.action ?? (rt.tile.drill ? `d:${rt.tile.drill.id}` : null);
+  return range ? `#[range=user|${range}]${inner}#[norange]` : inner;
 }
 
 export function renderRowTmux(kept: ResolvedTile[], cfg: Config, pad: number, gap: number,
@@ -70,6 +71,15 @@ set -g ${key} "#(${binary} tmux)"
 set -g status-interval 5
 
 # range=user|X passes X back through #{mouse_status_range}. No daemon, no HTTP.
-bind -n MouseDown1Status run-shell "${binary} action '#{mouse_status_range}'"
+# A range beginning "d:" is a drill and opens a popup; anything else is an
+# action and runs inline. One binding covers both.
+bind -n MouseDown1Status run-shell "${binary} click '#{mouse_status_range}'"
+
+# Right-click a tile for its menu: copy the value, refresh it, or hide it.
+bind -n MouseDown3Status display-menu -T "#[align=centre]statusline" \\
+  "Refresh now"  r "run-shell '${binary} refresh'" \\
+  "Copy value"   c "run-shell '${binary} tmux | tr -d \\"\\\\033\\" | pbcopy 2>/dev/null || true'" \\
+  "" \\
+  "Reload config" R "source-file ~/.tmux.conf"
 # --- end statusline --------------------------------------------------------`;
 }

@@ -25,6 +25,14 @@ export const BUNDLES: Bundle[] = [
   { id: "focus", name: "Focus", note: "Clock and context, nothing else.", tiles: ["clock", "context-bar"] },
   { id: "safety", name: "Safety", note: "Only the things that stop accidents.",
     tiles: ["kube-context", "aws-profile", "gcp-project", "protected-branch"] },
+  { id: "sre", name: "SRE / on-call", note: "Cluster, cloud, CI and machine load.",
+    tiles: ["kube-context", "aws-profile", "ci", "cpu", "memory", "load", "protected-branch"] },
+  { id: "data", name: "Data engineer", note: "Long jobs and the machine running them.",
+    tiles: ["cpu", "memory", "disk", "load", "network", "git-branch"] },
+  { id: "machine", name: "Machine", note: "Everything the daemon samples.",
+    tiles: ["cpu", "memory", "swap", "disk", "load", "network", "battery"] },
+  { id: "mobile", name: "Mobile dev", note: "Build state and the branch it came from.",
+    tiles: ["ci", "pr", "git-branch", "git-counts", "battery"] },
 ];
 
 let seq = 0;
@@ -37,6 +45,7 @@ export function makeTile(type: string, priority = 5): Tile {
     props: {},
     style: { gradient: null, glyph: "", label: "", labelDim: true },
     action: null,
+    drill: null,
     // A separator exists only to absorb slack, so it arrives flexed.
     flex: type === "separator",
     responsive: { priority, sm: { compact: true }, md: { compact: false } },

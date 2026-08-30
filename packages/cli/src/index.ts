@@ -9,11 +9,16 @@ import {
 import { DEFAULT_CONFIG } from "./defaultConfig.js";
 import { findGitRoot, readBranch } from "./git.js";
 import { CONFIG_PATH } from "./paths.js";
-import { getCached, spawnDetached } from "./cache.js";
+import { getCached, spawnDetached, CACHE_DIR } from "./cache.js";
+import { readdirSync, utimesSync } from "node:fs";
+import { join } from "node:path";
+import { spawnSync } from "node:child_process";
 import { doRefresh, type GitData, type GhData, type CiData, type SkillsData } from "./producers.js";
 import { readPersonal, readSystem, readMedia } from "./local.js";
 import { readMetrics, metricsAreStale } from "./metrics.js";
 import { shouldRing } from "./bell.js";
+import { cmdDoctor } from "./doctor.js";
+import { findDrill, runDrill, popupCommand } from "./drill.js";
 import { collectCustom, staleCustom, refreshCustom, toArgv } from "./custom.js";
 import { loadApprovals, approve, revokeAll, isApproved, hashArgv, APPROVALS_PATH } from "./approvals.js";
 import { setCredential, deleteCredential, listCredentialNames } from "./credentials.js";
@@ -173,6 +178,9 @@ const HELP = `statusline — one design, three render targets
   tmux                   print a tmux format string for status-left/right
   tmux-conf              print the .tmux.conf snippet (mouse + click binding)
   action <id>            run a media action: ${ACTIONS.join(", ")}
+  click <range>          tmux click router: "d:<id>" drills, else acts
+  view <id>              run a tile's drill command (what the popup runs)
+  refresh                expire every cache so the next render repopulates
   approve [--yes]        review and approve the config's custom commands
     --list                 show what is already approved
     --revoke-all           revoke every approval
@@ -186,6 +194,7 @@ const HELP = `statusline — one design, three render targets
   creds rm <n>           remove one
   action-url <id>        print the daemon URL for an action (needs a token)
   tiles                  list every available tile
+  doctor                 report what is misconfigured, and how to fix it
   --version
 `;
 
@@ -221,6 +230,38 @@ async function main() {
         return;
       }
       case "export": { process.exitCode = cmdExport(); return; }
+      case "doctor": { process.exitCode = cmdDoctor(); return; }
+      case "click": {
+        // One binding for both meanings: "d:<id>" drills, anything else acts.
+        const raw = (argv[1] ?? "").trim();
+        if (raw.startsWith("d:")) {
+          const id = raw.slice(2);
+          const d = findDrill(loadConfig(), id);
+          if (!d) return;
+          const self = process.argv[1] ? `${process.execPath} ${process.argv[1]}` : "statusline";
+          spawnSync("tmux", popupCommand(self, id, d.title), { stdio: "ignore" });
+          return;
+        }
+        process.exitCode = cmdAction(raw);
+        return;
+      }
+      case "view": {
+        const d = findDrill(loadConfig(), argv[1] ?? "");
+        if (!d) { process.stdout.write(`no drill with id "${argv[1] ?? ""}"\n`); return; }
+        process.exitCode = runDrill(d);
+        return;
+      }
+      case "refresh": {
+        // Expire every cache so the next render repopulates from scratch.
+        try {
+          const dir = CACHE_DIR;
+          for (const f of readdirSync(dir)) {
+            if (f.endsWith(".json")) utimesSync(join(dir, f), new Date(0), new Date(0));
+          }
+          process.stdout.write("caches expired; the next render refreshes\n");
+        } catch { process.stdout.write("nothing to refresh\n"); }
+        return;
+      }
       case "creds": {
         const sub = argv[1];
         if (sub === "list") {
@@ -252,10 +293,14 @@ async function main() {
       }
       case "approve": {
         const cfgNow = loadConfig();
-        const cmds = [...new Set(cfgNow.rows.flatMap((r) => r.tiles)
-          .filter((t) => t.type === "command")
-          .map((t) => String((t.props as Record<string, unknown>).command ?? ""))
-          .filter(Boolean))];
+        // Both kinds of runnable command need approval: a custom command tile
+        // and a drill. Missing the second meant a drill could never be run.
+        const tilesNow = cfgNow.rows.flatMap((r) => r.tiles);
+        const cmds = [...new Set([
+          ...tilesNow.filter((t) => t.type === "command")
+            .map((t) => String((t.props as Record<string, unknown>).command ?? "")),
+          ...tilesNow.filter((t) => t.drill).map((t) => t.drill!.command.join(" ")),
+        ].filter(Boolean))];
         if (argv[1] === "--list") {
           const list = loadApprovals();
           if (!list.length) process.stdout.write("no approved commands\n");
@@ -264,7 +309,12 @@ async function main() {
         }
         if (argv[1] === "--revoke-all") { revokeAll(); process.stdout.write("all approvals revoked\n"); return; }
         if (!cmds.length) { process.stdout.write("no command tiles in the config\n"); return; }
-        const pending = cmds.filter((c) => !isApproved(toArgv(c)));
+        const drillArgvs = tilesNow.filter((t) => t.drill).map((t) => t.drill!.command);
+        const pending = [
+          ...cmds.filter((c) => !isApproved(toArgv(c)) &&
+            !drillArgvs.some((d) => d.join(" ") === c)),
+          ...drillArgvs.filter((d) => !isApproved(d)).map((d) => d.join(" ")),
+        ];
         if (!pending.length) { process.stdout.write("every command tile is already approved\n"); return; }
         process.stdout.write("These commands run on your machine on every refresh:\n\n");
         for (const c of pending) {
@@ -273,6 +323,9 @@ async function main() {
         process.stdout.write(`\nApproving stores a hash in ${APPROVALS_PATH}. Editing a command revokes it.\n`);
         if (argv.includes("--yes")) {
           for (const c of pending) approve(toArgv(c), c);
+          // A drill carries its argv verbatim, so hash that rather than a
+          // re-split of the joined string, which can differ on quoting.
+          for (const t of tilesNow) if (t.drill) approve(t.drill.command, t.drill.command.join(" "));
           process.stdout.write(`\napproved ${pending.length}\n`);
         } else {
           process.stdout.write("\nRe-run with --yes to approve them.\n");
