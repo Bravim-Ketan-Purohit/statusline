@@ -117,6 +117,29 @@ function diagnoseConfig(cfg: Config): Finding[] {
       : { level: "ok", what: "metrics sample is fresh" });
   }
 
+  // Which credential each network tile needs, so a silent tile can be named.
+  const CRED_FOR: Record<string, string[]> = {
+    "linear-assigned": ["linear"], "linear-started": ["linear"],
+    "linear-review": ["linear"], "linear-triage": ["linear"],
+    "sentry-issues": ["sentry", "sentry_org", "sentry_project"],
+    "sentry-events": ["sentry", "sentry_org", "sentry_project"],
+    "deploy-status": ["vercel"], "deploy-duration": ["vercel"], "deploy-url": ["vercel"],
+  };
+  const have = new Set(listCredentialNames());
+  const missing = new Map<string, string[]>();
+  for (const tile of used) {
+    const need = CRED_FOR[tile];
+    if (!need) continue;
+    const gaps = need.filter((n) => !have.has(n));
+    if (gaps.length) missing.set(tile, gaps);
+  }
+  for (const [tile, gaps] of missing) {
+    f.push({ level: "warn", what: `tile "${tile}" has no credential, so it renders nothing`,
+             fix: `statusline creds set ${gaps[0]} <value>${gaps.length > 1 ? ` (also needs ${gaps.slice(1).join(", ")})` : ""}` });
+  }
+  if (used.some((t) => CRED_FOR[t]) && !missing.size)
+    f.push({ level: "ok", what: "every network tile has its credential" });
+
   const cmds = cfg.rows.flatMap((r) => r.tiles).filter((t) => t.type === "command")
     .map((t) => String((t.props as Record<string, unknown>).command ?? "")).filter(Boolean);
   const pending = cmds.filter((c) => !isApproved(toArgv(c)));

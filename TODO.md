@@ -231,21 +231,21 @@ Sizes are rough: **S** < 1h · **M** 1–4h · **L** 4–12h · **XL** multi-day
 
 ### 5.1 Reference integration: Linear (do this one first)
 
-- [ ] **5.1.1** `produceLinear()` — single GraphQL POST, personal API key from credentials
-- [ ] **5.1.2** Tiles: assigned count, in progress, in review, cycle progress, triage depth
-- [ ] **5.1.3** Counts only, never issue titles — a variable-length title is uncompressible
-- [ ] **5.1.4** TTL 120s, background refresh, `capabilities: ["needsNetwork"]`
-- [ ] **5.1.5** Render nothing when the credential is absent; surface it in `doctor`
-- [ ] **5.1.6** Document the shape in `CONTRIBUTING.md` as the template for 5.2–5.7
+- [x] **5.1.1** `produceLinear()` — single GraphQL POST, personal API key from credentials
+- [x] **5.1.2** Tiles: assigned count, in progress, in review, cycle progress, triage depth
+- [x] **5.1.3** Counts only, never issue titles — a variable-length title is uncompressible
+- [x] **5.1.4** TTL 120s, background refresh, `capabilities: ["needsNetwork"]`
+- [x] **5.1.5** Render nothing when the credential is absent; surface it in `doctor`
+- [x] **5.1.6** Document the shape in `CONTRIBUTING.md` as the template for 5.2–5.7
 
 ### 5.2–5.7 The rest (each: producer + tiles + TTL + credential + sample data)
 
-- [ ] **5.2** Sentry — error rate delta, new issues, p95
-- [ ] **5.3** PagerDuty / Opsgenie — am I on call, active incidents, unacked pages
-- [ ] **5.4** Vercel / Netlify — deploy status, build duration, preview URL as OSC 8
-- [ ] **5.5** Datadog / Grafana — active monitors by severity, SLO burn
-- [ ] **5.6** Status pages — aggregate into one `deps ●` that reddens when any dependency degrades
-- [ ] **5.7** Calendar — next event countdown, meeting in progress (`icalBuddy` on macOS)
+- [x] **5.2** Sentry — error rate delta, new issues, p95
+- [ ] **5.3** PagerDuty / Opsgenie — not requested
+- [x] **5.4** Vercel — deploy status, build duration, preview URL as OSC 8
+- [ ] **5.5** Datadog / Grafana — not requested
+- [ ] **5.6** Status pages — not requested — aggregate into one `deps ●` that reddens when any dependency degrades
+- [ ] **5.7** Calendar — not requested — next event countdown, meeting in progress (`icalBuddy` on macOS)
 
 ---
 

@@ -3,7 +3,7 @@
 Generated from `packages/core`. Re-run `node scripts/gen-reference.mjs` after
 adding a tile, a fill mode, a signal or an edge style.
 
-## Tiles (59)
+## Tiles (68)
 
 | id | tier | category | name |
 |---|---|---|---|
@@ -58,10 +58,19 @@ adding a tile, a fill mode, a signal or an edge style.
 | `context-bar` | 0 | session | Context window bar |
 | `context-pct` | 0 | session | Context percentage |
 | `cost` | 0 | session | Session cost |
+| `deploy-duration` | 4 | session | Deploy duration |
+| `deploy-status` | 4 | session | Deploy status |
+| `deploy-url` | 4 | session | Preview URL |
 | `effort` | 0 | session | Thinking effort |
 | `five-hour-bar` | 0 | session | 5h limit bar |
+| `linear-assigned` | 4 | session | Linear assigned |
+| `linear-review` | 4 | session | Linear in review |
+| `linear-started` | 4 | session | Linear in progress |
+| `linear-triage` | 4 | session | Linear triage queue |
 | `lines-changed` | 0 | session | Lines added/removed |
 | `model` | 0 | session | Model |
+| `sentry-events` | 4 | session | Sentry events 24h |
+| `sentry-issues` | 4 | session | Sentry unresolved |
 | `session-duration` | 0 | session | Session duration |
 | `session-name` | 0 | session | Session name |
 | `seven-day` | 0 | session | 7d limit |

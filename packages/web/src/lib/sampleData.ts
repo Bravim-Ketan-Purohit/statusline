@@ -75,6 +75,9 @@ export function sampleData(now: Date): Omit<RuntimeData, "columns"> {
       __protected: JSON.stringify(["main", "master", "release"]),
     },
     media: { title: "Sandese Aate Hai", artist: "Sonu Nigam", playing: true },
+    linear: { available: true, assigned: 4, started: 1, review: 2, triage: 6 },
+    sentry: { available: true, issues: 3, events24h: 412 },
+    deploy: { available: true, state: "READY", url: "https://demo.vercel.app", durationMs: 96_000 },
     metrics: {
       at: now.getTime(), cpuPct: 34, memUsed: 12.4e9, memTotal: 32e9,
       swapUsed: 1.2e9, swapTotal: 8e9, diskPct: 82, load1: 2.4,

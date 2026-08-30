@@ -174,6 +174,7 @@ export function produceSkills(root: string): SkillsData {
 }
 
 import { produceBattery } from "./local.js";
+import { produceLinear, produceSentry, produceVercel } from "./integrations.js";
 
 export interface SafetyData { kubeContext?: string; gcpProject?: string }
 
@@ -201,6 +202,9 @@ export const PRODUCERS: Record<string, (root: string) => unknown> = {
   battery: () => produceBattery(),
   kube: () => produceKube(),
   gcp: () => produceGcp(),
+  linear: () => produceLinear(),
+  sentry: () => produceSentry(),
+  deploy: () => produceVercel(),
 };
 
 export function doRefresh(kind: string, root: string) {

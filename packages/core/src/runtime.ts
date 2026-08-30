@@ -105,6 +105,14 @@ export interface Metrics {
   at: number;
 }
 
+export interface LinearInfo {
+  available?: boolean; assigned?: number; started?: number; review?: number; triage?: number;
+}
+export interface SentryInfo { available?: boolean; issues?: number; events24h?: number }
+export interface DeployInfo {
+  available?: boolean; state?: string; url?: string; durationMs?: number;
+}
+
 export interface RuntimeData {
   cc: ClaudeStdin;
   local: LocalData;
@@ -117,6 +125,9 @@ export interface RuntimeData {
   system?: SystemInfo;
   media?: MediaInfo;
   metrics?: Metrics;
+  linear?: LinearInfo;
+  sentry?: SentryInfo;
+  deploy?: DeployInfo;
   /** Output of user-configured custom commands, keyed by tile id. */
   custom?: Record<string, string>;
 }

@@ -16,6 +16,11 @@ import {
 import { venvTile, nodeVersionTile, pythonVersionTile, hostnameTile, batteryTile } from "./env.js";
 import { kubeContextTile, awsProfileTile, gcpProjectTile, protectedBranchTile } from "./safety.js";
 import { cpuTile, memoryTile, swapTile, diskTile, loadTile, networkTile, gpuTile, vramTile } from "./system.js";
+import {
+  linearAssignedTile, linearStartedTile, linearReviewTile, linearTriageTile,
+  sentryIssuesTile, sentryEventsTile,
+  deployStatusTile, deployDurationTile, deployUrlTile,
+} from "./integrations.js";
 import { verseTile, trackTile, skillsTile } from "./personal.js";
 import { playPauseTile, nextTile, prevTile, volUpTile, volDownTile, nowPlayingTile } from "./media.js";
 import { textTile, spacerTile, separatorTile, commandTile } from "./layout.js";
@@ -30,6 +35,10 @@ const MODULES: TileModule<any>[] = [
   modelTile, effortTile, sessionNameTile, durationTile, costTile,
   contextBarTile, contextPctTile, fiveHourBarTile, sevenDayTile,
   linesChangedTile, ccVersionTile, vimModeTile, agentTile,
+  // network-backed
+  linearAssignedTile, linearStartedTile, linearReviewTile, linearTriageTile,
+  sentryIssuesTile, sentryEventsTile,
+  deployStatusTile, deployDurationTile, deployUrlTile,
   // git
   gitBranchTile, gitCountsTile, gitAheadBehindTile, gitLastCommitTile,
   gitStashTile, gitShaTile, gitDiffTile, worktreeTile, repoSlugTile,

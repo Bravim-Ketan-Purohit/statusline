@@ -67,6 +67,9 @@ function collect(cc: ClaudeStdin, columns: number, cfg: Config): RuntimeData {
   const wantGh = ANY(used, ["gh-pr-counts", "gh-issues"]);
   const wantCi = used.has("ci");
   const wantSkills = used.has("skills");
+  const wantLinear = ANY(used, ["linear-assigned", "linear-started", "linear-review", "linear-triage"]);
+  const wantSentry = ANY(used, ["sentry-issues", "sentry-events"]);
+  const wantDeploy = ANY(used, ["deploy-status", "deploy-duration", "deploy-url"]);
   const root = (wantGit || wantGh || wantCi || wantSkills) ? findGitRoot(cwd) : null;
 
   const git = wantGit && root ? getCached<GitData>("git", root, TTL.git) : {};
@@ -113,6 +116,11 @@ function collect(cc: ClaudeStdin, columns: number, cfg: Config): RuntimeData {
     // Absent when the daemon is not running, or its file has gone stale.
     metrics: ANY(used, ["cpu","memory","swap","disk","load","network","gpu","vram"])
       ? readMetrics() : undefined,
+    // Network-backed, keyed on a constant rather than the git root: these are
+    // account-scoped, not repo-scoped, so one cache serves every repo.
+    linear: wantLinear ? getCached("linear", "account", 120_000) : undefined,
+    sentry: wantSentry ? getCached("sentry", "account", 120_000) : undefined,
+    deploy: wantDeploy ? getCached("deploy", "account", 120_000) : undefined,
   };
 }
 
