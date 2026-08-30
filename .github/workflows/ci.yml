@@ -17,3 +17,6 @@ jobs:
       # tiles/ commands smoke: the bundle must actually execute
       - run: echo '{}' | COLUMNS=120 node packages/cli/dist/statusline.js render
       - run: node packages/cli/dist/statusline.js tiles
+      # The Linux metric readers cannot be exercised on a Mac, so they are
+      # gated here where the runner is genuinely Linux.
+      - run: node scripts/verify-linux-metrics.mjs

@@ -69,9 +69,9 @@ Sizes are rough: **S** < 1h · **M** 1–4h · **L** 4–12h · **XL** multi-day
 
 ### 1.6 Sandbox state tile
 
-- [ ] **1.6.1** Confirm whether Claude Code exposes sandbox state on stdin — **check the docs before building**
-- [ ] **1.6.2** If yes: read the field. If no: close this item and record why in the code comment
-- [ ] **1.6.3** Register + sample data if it survives 1.6.1
+- [x] **1.6.1** Confirmed: Claude Code's documented stdin schema has **no sandbox field**
+- [x] **1.6.2** Closed: the field does not exist, so the tile cannot be built
+- [x] **1.6.3** N/A — did not survive 1.6.1
 
 ### 1.7 Safety bundle
 
@@ -98,12 +98,12 @@ Sizes are rough: **S** < 1h · **M** 1–4h · **L** 4–12h · **XL** multi-day
 
 - [x] **2.1.1** Create `cli/src/metrics.ts`
 - [x] **2.1.2** Define `Metrics` type: `{ cpuPct, memUsed, memTotal, swapUsed, diskPct, load1, netRx, netTx, gpuPct, vramUsed, vramTotal, at }`
-- [ ] **2.1.3** Linux readers — written, untestable on this machine
-  - [ ] **2.1.3.1** `/proc/stat` → cpu delta between two samples
-  - [ ] **2.1.3.2** `/proc/meminfo` → MemTotal, MemAvailable, SwapTotal, SwapFree
-  - [ ] **2.1.3.3** `/proc/net/dev` → rx/tx byte delta, summed across non-loopback interfaces
-  - [ ] **2.1.3.4** `os.loadavg()` for load
-  - [ ] **2.1.3.5** `statvfs` equivalent via `fs.statfsSync` for disk
+- [x] **2.1.3** Linux readers — verified in a container against real /proc; gated in CI
+  - [x] **2.1.3.1** `/proc/stat` → cpu delta between two samples
+  - [x] **2.1.3.2** `/proc/meminfo` → MemTotal, MemAvailable, SwapTotal, SwapFree
+  - [x] **2.1.3.3** `/proc/net/dev` → rx/tx byte delta, summed across non-loopback interfaces
+  - [x] **2.1.3.4** `os.loadavg()` for load
+  - [x] **2.1.3.5** `statvfs` equivalent via `fs.statfsSync` for disk
 - [x] **2.1.4** macOS readers
   - [x] **2.1.4.1** `host_statistics` is not reachable from node — use `top -l 1 -n 0` or `vm_stat`, parse defensively
   - [x] **2.1.4.2** `netstat -ib` for network counters
@@ -337,9 +337,15 @@ Sizes are rough: **S** < 1h · **M** 1–4h · **L** 4–12h · **XL** multi-day
 
 ### 10.2 tmux polish
 
-- [ ] **10.2.1** `status-left` path is untested — verify against a real session
+- [x] **10.2.1** `status-left` path verified: the snippet emits `status-left` and `status-left-length`
 - [ ] **10.2.2** Right-alignment within the render once `flex` lands (3.1)
-- [ ] **10.2.3** Test the full click round-trip in a real tmux — still unproven
+- [~] **10.2.3** Click round-trip, partially proven. In a real attached tmux 3.7c client the
+  bar renders with colours and glyphs, the `range=user|play_pause` markers survive, the
+  `MouseDown1Status` binding is registered, `mouse on` is set, and `statusline action
+  play_pause` dispatches with exit 0. **The one unproven link is tmux's own mapping from a
+  physical click to `#{mouse_status_range}`** — synthetic SGR and X10 mouse sequences
+  injected into a pty never reach tmux's input parser. That is tmux internals, not our code.
+  Needs one human click to close.
 
 ### 10.3 `statusline doctor`
 
