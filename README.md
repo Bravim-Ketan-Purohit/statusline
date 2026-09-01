@@ -6,6 +6,12 @@
 </p>
 
 <p align="center">
+  <b><a href="https://statusline.xyz">statusline.xyz</a></b> ·
+  <a href="https://statusline.xyz/app">Open the builder</a> ·
+  <a href="https://statusline.xyz/docs">Docs</a>
+</p>
+
+<p align="center">
   <a href="#quick-start">Quick start</a> ·
   <a href="#the-tiles">68 tiles</a> ·
   <a href="#make-it-react">Rules</a> ·
