@@ -4,3 +4,11 @@ dist-test/
 *.tsbuildinfo
 .impeccable/review/
 .impeccable/*.mjs
+
+# built site (Vercel builds this)
+dist-site/
+
+# Demo video lives on GitHub Releases, not in git history.
+# Publish with: pnpm media:publish   ·   see docs/GUIDE.md
+landing-kit/assets/video/*.mp4
+landing-kit/assets/video/*.webm

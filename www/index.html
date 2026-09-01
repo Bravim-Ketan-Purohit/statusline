@@ -1,0 +1,540 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Statusline — design the last line of your terminal</title>
+<meta name="description" content="A visual builder for your terminal's bottom row. Drag tiles onto a drawing sheet and the same layout renders into Claude Code, tmux and the browser — from one engine. Free and open source.">
+<link rel="canonical" href="https://statusline.dev/">
+<meta property="og:type" content="website">
+<meta property="og:title" content="Statusline — design the last line of your terminal">
+<meta property="og:description" content="Drag tiles onto a drawing sheet. One config renders into Claude Code, tmux and the browser. 68 tiles, 26 signals, MIT licensed.">
+<meta property="og:image" content="/assets/screenshots/01-builder-overview.png">
+<meta name="twitter:card" content="summary_large_image">
+<link rel="icon" href="/favicon.svg" type="image/svg+xml">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Sans:wght@400;500;600&family=JetBrains+Mono:wght@400;500;700&display=swap" rel="stylesheet">
+<style>
+  body { margin: 0; background: #faf9f7; -webkit-font-smoothing: antialiased; }
+  a { color: #16181c; text-decoration: none; }
+  a:hover { color: #a86a12; }
+  ::selection { background: #f2e3c6; }
+  input[type=range] { -webkit-appearance: none; appearance: none; background: transparent; }
+  input[type=range]::-webkit-slider-runnable-track { height: 2px; background: #d8d4cb; }
+  input[type=range]::-webkit-slider-thumb { -webkit-appearance: none; appearance: none; width: 14px; height: 22px; background: #16181c; border-radius: 2px; margin-top: -10px; cursor: grab; }
+  input[type=range]::-moz-range-track { height: 2px; background: #d8d4cb; }
+  input[type=range]::-moz-range-thumb { width: 14px; height: 22px; background: #16181c; border: 0; border-radius: 2px; cursor: grab; }
+  /* style-hover from the design, as real CSS */
+  .gh-chip:hover { border-color: #16181c !important; color: #16181c !important; }
+  .btn-dark:hover { background: #35322c !important; color: #faf9f7 !important; }
+  .btn-ghost:hover { border-color: #16181c !important; color: #16181c !important; }
+  .copy-btn:hover { background: #cf8c2e !important; }
+  @media (prefers-reduced-motion: reduce) { video { animation: none } }
+</style>
+</head>
+<body>
+
+<div style="font-family: 'IBM Plex Sans', Helvetica, sans-serif; color: #16181c; background: #faf9f7; min-height: 100vh; overflow-x: hidden">
+
+  <header style="position: sticky; top: 0; z-index: 20; background: rgba(250,249,247,0.88); backdrop-filter: blur(10px); border-bottom: 1px solid #e6e2da">
+    <div style="max-width: 1180px; margin: 0 auto; padding: 0 32px; min-height: 64px; display: flex; align-items: center; gap: 24px 32px; flex-wrap: wrap">
+      <a href="#top" style="display: flex; align-items: baseline; gap: 10px">
+        <span style="font-family: 'JetBrains Mono', monospace; font-size: 15px; font-weight: 700; letter-spacing: 0.14em">STATUSLINE</span>
+        <span style="font-family: 'JetBrains Mono', monospace; font-size: 10px; letter-spacing: 0.14em; color: #8d8880">REV A</span>
+      </a>
+      <nav style="display: flex; gap: 22px; font-size: 14px; color: #56534d; margin-left: auto; overflow: hidden; flex-wrap: nowrap; min-width: 0">
+        <a href="#builder" style="color: #56534d">Builder</a>
+        <a href="#fit" style="color: #56534d">Overflow</a>
+        <a href="#targets" style="color: #56534d">Targets</a>
+        <a href="#yours" style="color: #56534d">Styling</a>
+        <a href="#react" style="color: #56534d">Signals</a>
+        <a href="#watch" style="color: #56534d">Watch</a>
+        <a href="#oss" style="color: #56534d">Open source</a>
+      </nav>
+      <div style="display: flex; align-items: center; gap: 10px">
+        <a class="gh-chip" href="https://github.com/Bravim-Ketan-Purohit/statusline" style="display: inline-flex; align-items: center; gap: 8px; font-family: 'JetBrains Mono', monospace; font-size: 12px; letter-spacing: 0.04em; color: #56534d; border: 1px solid #d8d4cb; border-radius: 3px; padding: 8px 12px; white-space: nowrap"><span>★</span><span data-stars>—</span></a>
+        <a class="btn-dark" href="/app" style="font-size: 13px; font-weight: 500; color: #faf9f7; background: #16181c; border-radius: 3px; padding: 9px 16px; white-space: nowrap">Open the builder</a>
+      </div>
+    </div>
+  </header>
+
+  <section id="top" style="position: relative; background: #16181c; overflow: hidden; border-bottom: 1px solid #26282c">
+    <div style="position: relative; max-width: 1180px; margin: 0 auto; padding: 104px 32px 84px">
+      <div style="display: flex; align-items: baseline; gap: 12px; font-family: 'JetBrains Mono', monospace; font-size: 11px; letter-spacing: 0.16em; color: #9a958c; margin-bottom: 28px">
+        <span style="width: 22px; height: 1px; background: #cf8c2e; display: block"></span>
+        <span>A VISUAL BUILDER FOR YOUR TERMINAL'S BOTTOM ROW</span>
+      </div>
+      <h1 style="font-size: clamp(40px, 5.6vw, 68px); line-height: 1.03; letter-spacing: -0.03em; font-weight: 500; margin: 0; max-width: 15ch; color: #faf9f7; text-wrap: balance">Design the last line of your terminal.</h1>
+      <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(360px, 1fr)); gap: 40px 64px; align-items: end; margin-top: 36px">
+        <p style="font-size: 19px; line-height: 1.55; color: #b8b3aa; margin: 0; max-width: 52ch; text-wrap: pretty">Drag tiles onto a drawing sheet, style them, and tell them how to behave when the window gets narrow. Export one config file and the same layout renders into Claude Code, into tmux, and into the browser preview — from one engine, so the preview can't drift from what you see at 2am.</p>
+        <div style="display: flex; flex-direction: column; gap: 14px">
+          <div style="display: flex; align-items: stretch; border: 1px solid #3d4147; border-radius: 3px; overflow: hidden; background: #1c1f24">
+            <code id="installCmd" style="font-family: 'JetBrains Mono', monospace; font-size: 13px; padding: 13px 14px; flex: 1; color: #e8e4dc; white-space: nowrap; overflow: hidden">git clone https://github.com/Bravim-Ketan-Purohit/statusline</code>
+            <button class="copy-btn" id="copyBtn" style="font-family: 'JetBrains Mono', monospace; font-size: 11px; letter-spacing: 0.1em; border: 0; background: #faf9f7; color: #16181c; padding: 0 16px; cursor: pointer">COPY</button>
+          </div>
+          <p style="font-family: 'JetBrains Mono', monospace; font-size: 11.5px; color: #8d8880; margin: 0; letter-spacing: 0.02em">68 tiles · 26 signals · 20 CLI commands · MIT licensed</p>
+        </div>
+      </div>
+
+      <figure style="margin: 56px 0 0; border: 1px solid #33373d; border-radius: 4px; overflow: hidden; background: #0f1113; box-shadow: 0 30px 70px -34px rgba(0,0,0,0.9)">
+        <video data-rate="1.6" poster="/assets/video/background-fills-poster.jpg" style="display: block; width: 100%">
+          <source src="{{MEDIA}}/background-fills.mp4" type="video/mp4" />
+        </video>
+      </figure>
+      <figcaption style="font-family: 'JetBrains Mono', monospace; font-size: 11px; letter-spacing: 0.1em; color: #6f6b64; margin-top: 14px; display: flex; gap: 24px; flex-wrap: wrap">
+        <span style="color: #9a958c">FIG 1 — ONE BAR, RUNNING</span>
+        <span>FIFTEEN FILL MODES, ONE AFTER ANOTHER · NOT A SCREENSHOT</span>
+      </figcaption>
+    </div>
+  </section>
+
+  <section id="builder" style="max-width: 1180px; margin: 0 auto; padding: 104px 32px 0">
+    <div style="display: flex; gap: 12px; align-items: baseline; font-family: 'JetBrains Mono', monospace; font-size: 11px; letter-spacing: 0.16em; color: #8d8880; margin-bottom: 22px">
+      <span>01</span><span style="width: 22px; height: 1px; background: #d8d4cb; display: block; transform: translateY(-4px)"></span><span>THE SHEET YOU DRAW ON</span>
+    </div>
+    <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(400px, 1fr)); gap: 32px 64px; align-items: end">
+      <h2 style="font-size: clamp(30px, 3.4vw, 40px); line-height: 1.1; letter-spacing: -0.02em; font-weight: 500; margin: 0; max-width: 22ch">Parts list on the left, drawing sheet in the middle, inspector on the right.</h2>
+      <p style="font-size: 17px; line-height: 1.6; color: #4a4741; margin: 0; max-width: 48ch; text-wrap: pretty">68 tiles across six groups, ten starter bundles to open from, and a layer schedule that keeps track of which breakpoint you are looking at. Nothing is nested more than one level deep.</p>
+    </div>
+
+    <figure style="margin: 44px 0 0; border: 1px solid #ddd9d0; border-radius: 4px; background: #fff; padding: 10px; box-shadow: 0 24px 60px -30px rgba(22,24,28,0.28)">
+      <img src="/assets/screenshots/01-builder-overview.png" alt="The Statusline builder: parts list, drawing sheet, layer schedule and inspector" style="display: block; width: 100%; border-radius: 2px" width="3200" height="2000" loading="lazy" />
+    </figure>
+    <figcaption style="font-family: 'JetBrains Mono', monospace; font-size: 11px; letter-spacing: 0.1em; color: #8d8880; margin-top: 14px; display: flex; gap: 24px; flex-wrap: wrap">
+      <span>FIG 2 — THE BUILDER</span>
+      <span style="color: #b3ada3">PARTS LIST · DRAWING SHEET · LAYER SCHEDULE · INSPECTOR</span>
+    </figcaption>
+
+    <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(380px, 1fr)); gap: 20px; margin-top: 32px">
+      <figure style="margin: 0; border: 1px solid #ddd9d0; border-radius: 4px; background: #fff; overflow: hidden">
+        <video poster="/assets/video/drag-and-drop-poster.jpg" style="display: block; width: 100%; background: #16181c">
+          <source src="{{MEDIA}}/drag-and-drop.mp4" type="video/mp4" />
+        </video>
+      </figure>
+      <div style="display: flex; flex-direction: column; justify-content: center; gap: 14px; padding: 4px 0">
+        <div style="font-family: 'JetBrains Mono', monospace; font-size: 10.5px; letter-spacing: 0.14em; color: #8d8880">FIG 3 — ADDING TILES</div>
+        <h3 style="font-size: 24px; letter-spacing: -0.015em; font-weight: 500; margin: 0; max-width: 20ch">Drag a tile out of the parts list and it is on the bar.</h3>
+        <p style="font-size: 15.5px; line-height: 1.6; color: #4a4741; margin: 0; max-width: 44ch; text-wrap: pretty">Drop position sets the order. Every tile carries its own defaults, so a bar is usable before you have styled anything — then you select one and start turning knobs.</p>
+      </div>
+    </div>
+  </section>
+
+  <section id="fit" style="max-width: 1180px; margin: 0 auto; padding: 112px 32px 0">
+    <div style="display: flex; gap: 12px; align-items: baseline; font-family: 'JetBrains Mono', monospace; font-size: 11px; letter-spacing: 0.16em; color: #8d8880; margin-bottom: 22px">
+      <span>02</span><span style="width: 22px; height: 1px; background: #d8d4cb; display: block; transform: translateY(-4px)"></span><span>IT FITS, OR IT DROPS WHAT MATTERS LEAST</span>
+    </div>
+    <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(400px, 1fr)); gap: 32px 64px; align-items: end">
+      <h2 style="font-size: clamp(30px, 3.4vw, 40px); line-height: 1.1; letter-spacing: -0.02em; font-weight: 500; margin: 0; max-width: 22ch">Every tile has a priority. Narrow the window and the solver drops whole tiles.</h2>
+      <p style="font-size: 17px; line-height: 1.6; color: #4a4741; margin: 0; max-width: 48ch; text-wrap: pretty">It never wraps and never truncates mid-tile. Borders cost real columns and the solver counts them. Drag the handle below — this is the same ranking the CLI applies when it renders for real.</p>
+    </div>
+
+    <div style="margin-top: 44px; border: 1px solid #ddd9d0; border-radius: 4px; background: #fff; overflow: hidden">
+      <div style="display: flex; align-items: center; gap: 28px; padding: 16px 24px; border-bottom: 1px solid #eae6de; font-family: 'JetBrains Mono', monospace; font-size: 11px; letter-spacing: 0.12em; color: #8d8880; flex-wrap: wrap">
+        <span style="color: #16181c" id="colsLabel">138 COL · 1104 PX</span>
+        <span>LAYER <span style="color: #16181c" id="layerName">lg</span></span>
+        <span>DRAWN <span style="color: #16181c" id="drawnCount">11</span></span>
+        <span>DROPPED <span id="droppedCount" style="color: #16181c">—</span></span>
+        <span>USED <span style="color: #16181c" id="usedCols">0</span></span>
+        <span style="margin-left: auto" id="compactLabel"></span>
+      </div>
+
+      <div id="stage" style="background: #16181c; padding: 26px 24px; display: flex; justify-content: center; min-height: 74px; align-items: center">
+        <div id="bar"></div>
+      </div>
+
+      <div style="padding: 26px 24px 22px; border-top: 1px solid #eae6de">
+        <input type="range" min="28" max="220" step="1" value="138" id="cols" aria-label="Terminal width in columns" style="width: 100%; height: 22px; display: block" />
+        <div style="display: flex; justify-content: space-between; font-family: 'JetBrains Mono', monospace; font-size: 10.5px; letter-spacing: 0.12em; color: #b3ada3; margin-top: 6px">
+          <span>XS ≥0</span><span>SM ≥40</span><span>MD ≥80</span><span>LG ≥120</span><span>XL ≥160</span><span>2XL ≥220</span>
+        </div>
+      </div>
+
+      <div style="border-top: 1px solid #eae6de; display: grid; grid-template-columns: repeat(3, 1fr)">
+        <div style="padding: 20px 24px; border-right: 1px solid #eae6de">
+          <div style="font-family: 'JetBrains Mono', monospace; font-size: 10.5px; letter-spacing: 0.14em; color: #8d8880">SIX BREAKPOINTS</div>
+          <p style="font-size: 14px; line-height: 1.5; color: #4a4741; margin: 8px 0 0">Any style field can be overridden per breakpoint, and the thresholds themselves are editable.</p>
+        </div>
+        <div style="padding: 20px 24px; border-right: 1px solid #eae6de">
+          <div style="font-family: 'JetBrains Mono', monospace; font-size: 10.5px; letter-spacing: 0.14em; color: #8d8880">COMPACT MODE</div>
+          <p style="font-size: 14px; line-height: 1.5; color: #4a4741; margin: 8px 0 0">Under 80 columns the whole bar drops labels and shortens values. Above it, single low-priority tiles shorten first — a tile gives up its label before any tile disappears.</p>
+        </div>
+        <div style="padding: 20px 24px">
+          <div style="font-family: 'JetBrains Mono', monospace; font-size: 10.5px; letter-spacing: 0.14em; color: #8d8880">MONOTONIC</div>
+          <p style="font-size: 14px; line-height: 1.5; color: #4a4741; margin: 8px 0 0">A narrower terminal never keeps more tiles. That's a tested guarantee, not a hope.</p>
+        </div>
+      </div>
+    </div>
+
+    <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(380px, 1fr)); gap: 20px; margin-top: 20px">
+      <div style="display: flex; flex-direction: column; justify-content: center; gap: 14px; padding: 4px 0">
+        <div style="font-family: 'JetBrains Mono', monospace; font-size: 10.5px; letter-spacing: 0.14em; color: #8d8880">FIG 4 — THE REAL THING</div>
+        <h3 style="font-size: 24px; letter-spacing: -0.015em; font-weight: 500; margin: 0; max-width: 22ch">Same solver, driven by an actual window.</h3>
+        <p style="font-size: 15.5px; line-height: 1.6; color: #4a4741; margin: 0; max-width: 44ch; text-wrap: pretty">Pull the width handle in the builder and tiles leave in priority order, then come back in the order they left. Nothing is clipped in half on the way through.</p>
+      </div>
+      <figure style="margin: 0; border: 1px solid #ddd9d0; border-radius: 4px; background: #fff; overflow: hidden; order: -1">
+        <video poster="/assets/video/responsive-overflow-poster.jpg" style="display: block; width: 100%; background: #16181c">
+          <source src="{{MEDIA}}/responsive-overflow.mp4" type="video/mp4" />
+        </video>
+      </figure>
+    </div>
+  </section>
+
+  <section id="targets" style="max-width: 1180px; margin: 0 auto; padding: 112px 32px 0">
+    <div style="display: flex; gap: 12px; align-items: baseline; font-family: 'JetBrains Mono', monospace; font-size: 11px; letter-spacing: 0.16em; color: #8d8880; margin-bottom: 22px">
+      <span>03</span><span style="width: 22px; height: 1px; background: #d8d4cb; display: block; transform: translateY(-4px)"></span><span>ONE ENGINE, THREE TARGETS</span>
+    </div>
+    <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(400px, 1fr)); gap: 32px 64px; align-items: end">
+      <h2 style="font-size: clamp(30px, 3.4vw, 40px); line-height: 1.1; letter-spacing: -0.02em; font-weight: 500; margin: 0; max-width: 22ch">Design it once. The preview is not a mockup of the output — it is the output.</h2>
+      <p style="font-size: 17px; line-height: 1.6; color: #4a4741; margin: 0; max-width: 48ch; text-wrap: pretty">The three targets do differ in what they can physically do, and the builder tells you which while you're designing rather than after you install.</p>
+    </div>
+
+    <div style="margin-top: 44px; border: 1px solid #ddd9d0; border-radius: 4px; background: #fff; overflow: hidden; overflow-x: auto">
+      <div style="min-width: 700px">
+      <div style="display: grid; grid-template-columns: 1.2fr 1fr 1fr 1fr; font-family: 'JetBrains Mono', monospace; font-size: 11px; letter-spacing: 0.12em; color: #8d8880; border-bottom: 1px solid #ddd9d0; background: #fbfaf8">
+        <div style="padding: 14px 22px"></div>
+        <div style="padding: 14px 22px; color: #16181c">CLAUDE CODE</div>
+        <div style="padding: 14px 22px; color: #16181c">TMUX</div>
+        <div style="padding: 14px 22px; color: #16181c">WEB PREVIEW</div>
+      </div>
+      <div style="display: grid; grid-template-columns: 1.2fr 1fr 1fr 1fr; border-bottom: 1px solid #f0ece4; font-size: 14.5px"><div style="padding: 15px 22px; color: #8d8880">How it runs</div><div style="padding: 15px 22px">Captured stdout, JSON on stdin</div><div style="padding: 15px 22px">#() in the status format</div><div style="padding: 15px 22px">Live in the browser</div></div>
+      <div style="display: grid; grid-template-columns: 1.2fr 1fr 1fr 1fr; border-bottom: 1px solid #f0ece4; font-size: 14.5px"><div style="padding: 15px 22px; color: #8d8880">Rows</div><div style="padding: 15px 22px">Up to 5</div><div style="padding: 15px 22px">1 — left or right side</div><div style="padding: 15px 22px">Unlimited</div></div>
+      <div style="display: grid; grid-template-columns: 1.2fr 1fr 1fr 1fr; border-bottom: 1px solid #f0ece4; font-size: 14.5px"><div style="padding: 15px 22px; color: #8d8880">Refresh floor</div><div style="padding: 15px 22px">1 second</div><div style="padding: 15px 22px">tmux's status-interval</div><div style="padding: 15px 22px">60fps</div></div>
+      <div style="display: grid; grid-template-columns: 1.2fr 1fr 1fr 1fr; border-bottom: 1px solid #f0ece4; font-size: 14.5px"><div style="padding: 15px 22px; color: #8d8880">Smooth animation</div><div style="padding: 15px 22px">One step per refresh</div><div style="padding: 15px 22px">One step per interval</div><div style="padding: 15px 22px">Yes</div></div>
+      <div style="display: grid; grid-template-columns: 1.2fr 1fr 1fr 1fr; border-bottom: 1px solid #f0ece4; font-size: 14.5px"><div style="padding: 15px 22px; color: #8d8880">Click a tile</div><div style="padding: 15px 22px">Opens an OSC 8 link</div><div style="padding: 15px 22px">Runs a real command</div><div style="padding: 15px 22px">DOM events</div></div>
+      <div style="display: grid; grid-template-columns: 1.2fr 1fr 1fr 1fr; border-bottom: 1px solid #f0ece4; font-size: 14.5px"><div style="padding: 15px 22px; color: #8d8880">Colour</div><div style="padding: 15px 22px">truecolor / 256 / 16</div><div style="padding: 15px 22px">truecolor / 256 / 16</div><div style="padding: 15px 22px">truecolor</div></div>
+      <div style="padding: 20px 22px; font-size: 14.5px; line-height: 1.6; color: #4a4741; background: #fbfaf8">
+        The asymmetry is the interesting part: tmux can dispatch a real command on click, Claude Code opens an OSC 8 hyperlink, and the web preview has full DOM events.
+      </div>
+      </div>
+    </div>
+  </section>
+
+  <section id="yours" style="max-width: 1180px; margin: 0 auto; padding: 112px 32px 0">
+    <div style="display: flex; gap: 12px; align-items: baseline; font-family: 'JetBrains Mono', monospace; font-size: 11px; letter-spacing: 0.16em; color: #8d8880; margin-bottom: 22px">
+      <span>04</span><span style="width: 22px; height: 1px; background: #d8d4cb; display: block; transform: translateY(-4px)"></span><span>MAKE IT YOURS</span>
+    </div>
+    <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(400px, 1fr)); gap: 32px 64px; align-items: end">
+      <h2 style="font-size: clamp(30px, 3.4vw, 40px); line-height: 1.1; letter-spacing: -0.02em; font-weight: 500; margin: 0; max-width: 22ch">Fifteen fill modes, seven border edges, five themes.</h2>
+      <p style="font-size: 17px; line-height: 1.6; color: #4a4741; margin: 0; max-width: 48ch; text-wrap: pretty">Colour is per tile or for the whole bar, with named palette entries defined once on the sheet so re-theming is a single edit. Every fill is quantised and emitted one escape per cell.</p>
+    </div>
+
+    <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(380px, 1fr)); gap: 20px; margin-top: 44px">
+      <figure style="margin: 0; border: 1px solid #ddd9d0; border-radius: 4px; background: #fff; overflow: hidden">
+        <video poster="/assets/video/background-fills-poster.jpg" style="display: block; width: 100%; background: #16181c">
+          <source src="{{MEDIA}}/background-fills.mp4" type="video/mp4" />
+        </video>
+        <figcaption style="padding: 16px 20px; border-top: 1px solid #eae6de">
+          <div style="font-family: 'JetBrains Mono', monospace; font-size: 10.5px; letter-spacing: 0.14em; color: #8d8880">15 FILL MODES</div>
+          <p style="font-size: 14.5px; line-height: 1.55; color: #4a4741; margin: 8px 0 0">linear · radial · conic · diamond · wave · ripple · spiral · barber · comet · scan · plasma · pulse · breathe · rainbow · strobe. Up to 16 stops, an angle, an origin, speed and scale.</p>
+        </figcaption>
+      </figure>
+      <figure style="margin: 0; border: 1px solid #ddd9d0; border-radius: 4px; background: #fff; overflow: hidden">
+        <video poster="/assets/video/image-crop-poster.jpg" style="display: block; width: 100%; background: #16181c">
+          <source src="{{MEDIA}}/image-crop.mp4" type="video/mp4" />
+        </video>
+        <figcaption style="padding: 16px 20px; border-top: 1px solid #eae6de">
+          <div style="font-family: 'JetBrains Mono', monospace; font-size: 10.5px; letter-spacing: 0.14em; color: #8d8880">IMAGES AND GIFS</div>
+          <p style="font-size: 14.5px; line-height: 1.55; color: #4a4741; margin: 8px 0 0">Drag to position, slider to zoom. Pull an 8-stop ramp out of the crop, or bake it to a 96 × 8 cell matrix with half-blocks.</p>
+        </figcaption>
+      </figure>
+    </div>
+
+    <div style="margin-top: 20px; border: 1px solid #ddd9d0; border-radius: 4px; background: #fff; overflow: hidden">
+      <div style="display: flex; align-items: baseline; gap: 20px; padding: 16px 20px; border-bottom: 1px solid #eae6de; flex-wrap: wrap">
+        <div style="font-family: 'JetBrains Mono', monospace; font-size: 10.5px; letter-spacing: 0.14em; color: #8d8880">FIVE THEMES</div>
+        <div style="font-size: 14px; color: #4a4741">16 colour is a real constraint mode for terminals without truecolor, not a stylistic choice.</div>
+      </div>
+      <div style="display: flex; gap: 8px; padding: 12px 20px; flex-wrap: wrap; border-bottom: 1px solid #eae6de; font-family: 'JetBrains Mono', monospace; font-size: 11px; letter-spacing: 0.1em; color: #8d8880">
+        <span>DRAFTING</span><span style="color: #ddd9d0">/</span>
+        <span>BLUEPRINT</span><span style="color: #ddd9d0">/</span>
+        <span>SILKSCREEN</span><span style="color: #ddd9d0">/</span>
+        <span>PLAIN INK</span><span style="color: #ddd9d0">/</span>
+        <span>16 COLOUR</span>
+      </div>
+      <video poster="/assets/video/themes-poster.jpg" style="display: block; width: 100%; background: #16181c">
+        <source src="{{MEDIA}}/themes.mp4" type="video/mp4" />
+      </video>
+    </div>
+  </section>
+
+  <section id="react" style="max-width: 1180px; margin: 0 auto; padding: 112px 32px 0">
+    <div style="display: flex; gap: 12px; align-items: baseline; font-family: 'JetBrains Mono', monospace; font-size: 11px; letter-spacing: 0.16em; color: #8d8880; margin-bottom: 22px">
+      <span>05</span><span style="width: 22px; height: 1px; background: #d8d4cb; display: block; transform: translateY(-4px)"></span><span>MAKE IT REACT</span>
+    </div>
+    <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(400px, 1fr)); gap: 32px 64px; align-items: end">
+      <h2 style="font-size: clamp(30px, 3.4vw, 40px); line-height: 1.1; letter-spacing: -0.02em; font-weight: 500; margin: 0; max-width: 22ch">A tile can change colour, grow a border, or blink when something is wrong.</h2>
+      <p style="font-size: 17px; line-height: 1.6; color: #4a4741; margin: 0; max-width: 48ch; text-wrap: pretty">Up to twelve rules per tile, layered — later rules win, so a general rule takes a specific override. Blink is derived from the clock, not the terminal's blink attribute, so it looks identical everywhere.</p>
+    </div>
+
+    <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(380px, 1fr)); gap: 20px; margin-top: 44px">
+      <figure style="margin: 0; border: 1px solid #ddd9d0; border-radius: 4px; background: #fff; overflow: hidden">
+        <video poster="/assets/video/blink-rule-poster.jpg" style="display: block; width: 100%; background: #16181c">
+          <source src="{{MEDIA}}/blink-rule.mp4" type="video/mp4" />
+        </video>
+        <figcaption style="padding: 16px 20px; border-top: 1px solid #eae6de">
+          <div style="font-family: 'JetBrains Mono', monospace; font-size: 10.5px; letter-spacing: 0.14em; color: #8d8880">A RULE ON CI.FAILING</div>
+          <p style="font-size: 14.5px; line-height: 1.55; color: #4a4741; margin: 8px 0 0">Pick a signal, a threshold, then what changes: ink, ground, border, blink target and rate. Ring the bell once when the incident starts — never on every render.</p>
+        </figcaption>
+      </figure>
+      <div style="border: 1px solid #ddd9d0; border-radius: 4px; background: #fff; padding: 20px; display: flex; flex-direction: column; gap: 18px">
+        <div style="font-family: 'JetBrains Mono', monospace; font-size: 10.5px; letter-spacing: 0.14em; color: #8d8880">26 SIGNALS</div>
+        <div style="display: flex; flex-direction: column; gap: 8px"><div style="font-size: 12px; letter-spacing: 0.06em; color: #16181c; font-weight: 500">CI</div><div style="display: flex; flex-wrap: wrap; gap: 5px"><code style="font-family: 'JetBrains Mono', monospace; font-size: 11.5px; color: #4a4741; background: #f5f2ec; border-radius: 2px; padding: 4px 7px">ci.failing</code><code style="font-family: 'JetBrains Mono', monospace; font-size: 11.5px; color: #4a4741; background: #f5f2ec; border-radius: 2px; padding: 4px 7px">ci.passing</code><code style="font-family: 'JetBrains Mono', monospace; font-size: 11.5px; color: #4a4741; background: #f5f2ec; border-radius: 2px; padding: 4px 7px">ci.running</code></div></div>
+        <div style="display: flex; flex-direction: column; gap: 8px"><div style="font-size: 12px; letter-spacing: 0.06em; color: #16181c; font-weight: 500">Pull requests</div><div style="display: flex; flex-wrap: wrap; gap: 5px"><code style="font-family: 'JetBrains Mono', monospace; font-size: 11.5px; color: #4a4741; background: #f5f2ec; border-radius: 2px; padding: 4px 7px">pr.approved</code><code style="font-family: 'JetBrains Mono', monospace; font-size: 11.5px; color: #4a4741; background: #f5f2ec; border-radius: 2px; padding: 4px 7px">pr.changes</code><code style="font-family: 'JetBrains Mono', monospace; font-size: 11.5px; color: #4a4741; background: #f5f2ec; border-radius: 2px; padding: 4px 7px">pr.pending</code><code style="font-family: 'JetBrains Mono', monospace; font-size: 11.5px; color: #4a4741; background: #f5f2ec; border-radius: 2px; padding: 4px 7px">pr.open</code><code style="font-family: 'JetBrains Mono', monospace; font-size: 11.5px; color: #4a4741; background: #f5f2ec; border-radius: 2px; padding: 4px 7px">review.waiting</code></div></div>
+        <div style="display: flex; flex-direction: column; gap: 8px"><div style="font-size: 12px; letter-spacing: 0.06em; color: #16181c; font-weight: 500">Git</div><div style="display: flex; flex-wrap: wrap; gap: 5px"><code style="font-family: 'JetBrains Mono', monospace; font-size: 11.5px; color: #4a4741; background: #f5f2ec; border-radius: 2px; padding: 4px 7px">git.conflict</code><code style="font-family: 'JetBrains Mono', monospace; font-size: 11.5px; color: #4a4741; background: #f5f2ec; border-radius: 2px; padding: 4px 7px">git.dirty</code><code style="font-family: 'JetBrains Mono', monospace; font-size: 11.5px; color: #4a4741; background: #f5f2ec; border-radius: 2px; padding: 4px 7px">git.clean</code><code style="font-family: 'JetBrains Mono', monospace; font-size: 11.5px; color: #4a4741; background: #f5f2ec; border-radius: 2px; padding: 4px 7px">git.ahead</code><code style="font-family: 'JetBrains Mono', monospace; font-size: 11.5px; color: #4a4741; background: #f5f2ec; border-radius: 2px; padding: 4px 7px">git.behind</code></div></div>
+        <div style="display: flex; flex-direction: column; gap: 8px"><div style="font-size: 12px; letter-spacing: 0.06em; color: #16181c; font-weight: 500">Budget</div><div style="display: flex; flex-wrap: wrap; gap: 5px"><code style="font-family: 'JetBrains Mono', monospace; font-size: 11.5px; color: #4a4741; background: #f5f2ec; border-radius: 2px; padding: 4px 7px">context.above</code><code style="font-family: 'JetBrains Mono', monospace; font-size: 11.5px; color: #4a4741; background: #f5f2ec; border-radius: 2px; padding: 4px 7px">fivehour.above</code><code style="font-family: 'JetBrains Mono', monospace; font-size: 11.5px; color: #4a4741; background: #f5f2ec; border-radius: 2px; padding: 4px 7px">sevenday.above</code><code style="font-family: 'JetBrains Mono', monospace; font-size: 11.5px; color: #4a4741; background: #f5f2ec; border-radius: 2px; padding: 4px 7px">cost.above</code></div></div>
+        <div style="display: flex; flex-direction: column; gap: 8px"><div style="font-size: 12px; letter-spacing: 0.06em; color: #16181c; font-weight: 500">Machine</div><div style="display: flex; flex-wrap: wrap; gap: 5px"><code style="font-family: 'JetBrains Mono', monospace; font-size: 11.5px; color: #4a4741; background: #f5f2ec; border-radius: 2px; padding: 4px 7px">cpu.above</code><code style="font-family: 'JetBrains Mono', monospace; font-size: 11.5px; color: #4a4741; background: #f5f2ec; border-radius: 2px; padding: 4px 7px">mem.above</code><code style="font-family: 'JetBrains Mono', monospace; font-size: 11.5px; color: #4a4741; background: #f5f2ec; border-radius: 2px; padding: 4px 7px">swap.above</code><code style="font-family: 'JetBrains Mono', monospace; font-size: 11.5px; color: #4a4741; background: #f5f2ec; border-radius: 2px; padding: 4px 7px">disk.above</code><code style="font-family: 'JetBrains Mono', monospace; font-size: 11.5px; color: #4a4741; background: #f5f2ec; border-radius: 2px; padding: 4px 7px">load.above</code><code style="font-family: 'JetBrains Mono', monospace; font-size: 11.5px; color: #4a4741; background: #f5f2ec; border-radius: 2px; padding: 4px 7px">gpu.above</code><code style="font-family: 'JetBrains Mono', monospace; font-size: 11.5px; color: #4a4741; background: #f5f2ec; border-radius: 2px; padding: 4px 7px">vram.above</code><code style="font-family: 'JetBrains Mono', monospace; font-size: 11.5px; color: #4a4741; background: #f5f2ec; border-radius: 2px; padding: 4px 7px">battery.below</code></div></div>
+        <div style="display: flex; flex-direction: column; gap: 8px"><div style="font-size: 12px; letter-spacing: 0.06em; color: #16181c; font-weight: 500">Always</div><div style="display: flex; flex-wrap: wrap; gap: 5px"><code style="font-family: 'JetBrains Mono', monospace; font-size: 11.5px; color: #4a4741; background: #f5f2ec; border-radius: 2px; padding: 4px 7px">always</code></div></div>
+        <p style="font-size: 14px; line-height: 1.55; color: #4a4741; margin: 4px 0 0">A tile can also stay hidden until it has something to say, and a firing rule can escalate past the hide rules.</p>
+      </div>
+    </div>
+  </section>
+
+  <section id="watch" style="max-width: 1180px; margin: 0 auto; padding: 112px 32px 0">
+    <div style="display: flex; gap: 12px; align-items: baseline; font-family: 'JetBrains Mono', monospace; font-size: 11px; letter-spacing: 0.16em; color: #8d8880; margin-bottom: 22px">
+      <span>06</span><span style="width: 22px; height: 1px; background: #d8d4cb; display: block; transform: translateY(-4px)"></span><span>THE WHOLE BUILD</span>
+    </div>
+    <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(400px, 1fr)); gap: 32px 64px; align-items: end">
+      <h2 style="font-size: clamp(30px, 3.4vw, 40px); line-height: 1.1; letter-spacing: -0.02em; font-weight: 500; margin: 0; max-width: 22ch">Forty-eight seconds, one take, no cuts.</h2>
+      <p style="font-size: 17px; line-height: 1.6; color: #4a4741; margin: 0; max-width: 48ch; text-wrap: pretty">Two tiles dragged in, a border added, a flowing gradient turned on and cycled through five modes, then the width pulled down until the bar sheds three tiles and takes them back.</p>
+    </div>
+    <figure style="margin: 36px 0 0; border: 1px solid #ddd9d0; border-radius: 4px; background: #fff; padding: 10px; box-shadow: 0 24px 60px -30px rgba(22,24,28,0.28)">
+      <video data-manual="1" preload="metadata" poster="/assets/video/hero-build-poster.jpg" style="display: block; width: 100%; border-radius: 2px; background: #16181c">
+        <source src="{{MEDIA}}/hero-build.mp4" type="video/mp4" />
+      </video>
+    </figure>
+    <figcaption style="font-family: 'JetBrains Mono', monospace; font-size: 11px; letter-spacing: 0.1em; color: #8d8880; margin-top: 14px">FIG 7 — SOUND OFF · 48s</figcaption>
+  </section>
+
+  <section id="oss" style="max-width: 1180px; margin: 0 auto; padding: 112px 32px 0">
+    <div style="display: flex; gap: 12px; align-items: baseline; font-family: 'JetBrains Mono', monospace; font-size: 11px; letter-spacing: 0.16em; color: #8d8880; margin-bottom: 22px">
+      <span>07</span><span style="width: 22px; height: 1px; background: #d8d4cb; display: block; transform: translateY(-4px)"></span><span>OPEN SOURCE</span>
+    </div>
+    <div style="border: 1px solid #16181c; border-radius: 4px; background: #fff; display: grid; grid-template-columns: repeat(auto-fit, minmax(340px, 1fr)); overflow: hidden">
+      <div style="padding: 40px; border-right: 1px solid #eae6de">
+        <div style="display: flex; align-items: baseline; gap: 12px">
+          <span data-stars style="font-size: 64px; letter-spacing: -0.04em; font-weight: 500; line-height: 1">—</span>
+          <span style="font-family: 'JetBrains Mono', monospace; font-size: 11px; letter-spacing: 0.14em; color: #8d8880">STARS</span>
+        </div>
+        <p style="font-size: 16px; line-height: 1.6; color: #4a4741; margin: 16px 0 28px; max-width: 36ch">Free and open source. Read the renderer, file an issue, send a tile — the whole thing is on GitHub.</p>
+        <div style="display: flex; gap: 10px; flex-wrap: wrap">
+          <a class="btn-dark" href="https://github.com/Bravim-Ketan-Purohit/statusline" style="display: inline-flex; align-items: center; gap: 9px; font-size: 14px; font-weight: 500; color: #faf9f7; background: #16181c; border-radius: 3px; padding: 13px 20px">
+            <span style="font-family: 'JetBrains Mono', monospace; font-size: 13px">★</span>
+            <span>Star on GitHub</span>
+            <span data-stars style="font-family: 'JetBrains Mono', monospace; font-size: 12px; color: #b8b3aa; border-left: 1px solid #4a4741; padding-left: 9px">—</span>
+          </a>
+          <a class="btn-ghost" href="/app" style="display: inline-block; font-size: 14px; font-weight: 500; color: #16181c; border: 1px solid #d8d4cb; border-radius: 3px; padding: 13px 20px">Open the builder</a>
+        </div>
+        <p style="font-family: 'JetBrains Mono', monospace; font-size: 11px; letter-spacing: 0.06em; color: #8d8880; margin: 18px 0 0">Bravim-Ketan-Purohit/statusline · MIT</p>
+      </div>
+      <div style="padding: 40px; display: grid; grid-template-columns: 1fr 1fr; gap: 14px 32px; align-content: start">
+        <div style="display: flex; gap: 10px; align-items: baseline; font-size: 14.5px; color: #4a4741"><span style="color: #cf8c2e; font-family: 'JetBrains Mono', monospace; font-size: 12px">▸</span><span>68 tiles across six groups</span></div>
+        <div style="display: flex; gap: 10px; align-items: baseline; font-size: 14.5px; color: #4a4741"><span style="color: #cf8c2e; font-family: 'JetBrains Mono', monospace; font-size: 12px">▸</span><span>10 starter bundles</span></div>
+        <div style="display: flex; gap: 10px; align-items: baseline; font-size: 14.5px; color: #4a4741"><span style="color: #cf8c2e; font-family: 'JetBrains Mono', monospace; font-size: 12px">▸</span><span>15 fill modes</span></div>
+        <div style="display: flex; gap: 10px; align-items: baseline; font-size: 14.5px; color: #4a4741"><span style="color: #cf8c2e; font-family: 'JetBrains Mono', monospace; font-size: 12px">▸</span><span>5 themes</span></div>
+        <div style="display: flex; gap: 10px; align-items: baseline; font-size: 14.5px; color: #4a4741"><span style="color: #cf8c2e; font-family: 'JetBrains Mono', monospace; font-size: 12px">▸</span><span>26 signals, 12 rules per tile</span></div>
+        <div style="display: flex; gap: 10px; align-items: baseline; font-size: 14.5px; color: #4a4741"><span style="color: #cf8c2e; font-family: 'JetBrains Mono', monospace; font-size: 12px">▸</span><span>6 editable breakpoints</span></div>
+        <div style="display: flex; gap: 10px; align-items: baseline; font-size: 14.5px; color: #4a4741"><span style="color: #cf8c2e; font-family: 'JetBrains Mono', monospace; font-size: 12px">▸</span><span>20 CLI commands</span></div>
+        <div style="display: flex; gap: 10px; align-items: baseline; font-size: 14.5px; color: #4a4741"><span style="color: #cf8c2e; font-family: 'JetBrains Mono', monospace; font-size: 12px">▸</span><span>Claude Code, tmux and web output</span></div>
+      </div>
+    </div>
+  </section>
+
+  <section id="install" style="max-width: 1180px; margin: 0 auto; padding: 112px 32px 0">
+    <div style="display: flex; gap: 12px; align-items: baseline; font-family: 'JetBrains Mono', monospace; font-size: 11px; letter-spacing: 0.16em; color: #8d8880; margin-bottom: 22px">
+      <span>08</span><span style="width: 22px; height: 1px; background: #d8d4cb; display: block; transform: translateY(-4px)"></span><span>GET STARTED</span>
+    </div>
+    <h2 style="font-size: clamp(30px, 3.4vw, 40px); line-height: 1.1; letter-spacing: -0.02em; font-weight: 500; margin: 0 0 44px; max-width: 24ch">Three steps, and one of them is optional.</h2>
+    <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(280px, 1fr)); gap: 20px">
+      <div style="border: 1px solid #ddd9d0; border-radius: 4px; background: #fff; padding: 24px; display: flex; flex-direction: column; gap: 12px">
+        <div style="font-family: 'JetBrains Mono', monospace; font-size: 10.5px; letter-spacing: 0.14em; color: #8d8880">STEP 01</div>
+        <div style="font-size: 19px; letter-spacing: -0.01em; font-weight: 500">Draw the sheet</div>
+        <p style="font-size: 14.5px; line-height: 1.55; color: #4a4741; margin: 0; flex: 1">Build the layout in the browser, then hit Copy install. The config travels as a single base64 blob.</p>
+        <code style="font-family: 'JetBrains Mono', monospace; font-size: 12.5px; color: #faf9f7; background: #16181c; border-radius: 3px; padding: 11px 13px; display: block; overflow-x: auto; white-space: nowrap">statusline export</code>
+      </div>
+      <div style="border: 1px solid #ddd9d0; border-radius: 4px; background: #fff; padding: 24px; display: flex; flex-direction: column; gap: 12px">
+        <div style="font-family: 'JetBrains Mono', monospace; font-size: 10.5px; letter-spacing: 0.14em; color: #8d8880">STEP 02</div>
+        <div style="font-size: 19px; letter-spacing: -0.01em; font-weight: 500">Import it</div>
+        <p style="font-size: 14.5px; line-height: 1.55; color: #4a4741; margin: 0; flex: 1">Writes the config and patches ~/.claude/settings.json — it shows you a diff rather than overwriting blindly.</p>
+        <code style="font-family: 'JetBrains Mono', monospace; font-size: 12.5px; color: #faf9f7; background: #16181c; border-radius: 3px; padding: 11px 13px; display: block; overflow-x: auto; white-space: nowrap">statusline import &lt;blob&gt;</code>
+      </div>
+      <div style="border: 1px solid #ddd9d0; border-radius: 4px; background: #fff; padding: 24px; display: flex; flex-direction: column; gap: 12px">
+        <div style="font-family: 'JetBrains Mono', monospace; font-size: 10.5px; letter-spacing: 0.14em; color: #8d8880">STEP 03</div>
+        <div style="font-size: 19px; letter-spacing: -0.01em; font-weight: 500">Add tmux</div>
+        <p style="font-size: 14.5px; line-height: 1.55; color: #4a4741; margin: 0; flex: 1">Optional. Prints the .tmux.conf snippet with the mouse binding already included.</p>
+        <code style="font-family: 'JetBrains Mono', monospace; font-size: 12.5px; color: #faf9f7; background: #16181c; border-radius: 3px; padding: 11px 13px; display: block; overflow-x: auto; white-space: nowrap">statusline tmux-conf</code>
+      </div>
+    </div>
+  </section>
+
+  <section style="max-width: 1180px; margin: 0 auto; padding: 112px 32px 0">
+    <div style="display: flex; gap: 12px; align-items: baseline; font-family: 'JetBrains Mono', monospace; font-size: 11px; letter-spacing: 0.16em; color: #8d8880; margin-bottom: 22px">
+      <span>09</span><span style="width: 22px; height: 1px; background: #d8d4cb; display: block; transform: translateY(-4px)"></span><span>QUESTIONS</span>
+    </div>
+    <div style="border-top: 1px solid #ddd9d0">
+      <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(320px, 1fr)); gap: 16px 48px; padding: 26px 0; border-bottom: 1px solid #eae6de"><div style="font-size: 18px; letter-spacing: -0.01em; font-weight: 500; max-width: 26ch">Do I need Claude Code to use it?</div><p style="font-size: 15.5px; line-height: 1.6; color: #4a4741; margin: 0; text-wrap: pretty">No. tmux is a first-class target on its own, and the web preview runs anywhere. Claude Code just gets the extra rows and the OSC 8 links.</p></div>
+      <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(320px, 1fr)); gap: 16px 48px; padding: 26px 0; border-bottom: 1px solid #eae6de"><div style="font-size: 18px; letter-spacing: -0.01em; font-weight: 500; max-width: 26ch">What do the machine tiles need?</div><p style="font-size: 15.5px; line-height: 1.6; color: #4a4741; margin: 0; text-wrap: pretty">The daemon. statusline daemon samples cpu, memory, swap, disk, load, network, gpu and vram off the render path, and statusline doctor tells you if it is not running.</p></div>
+      <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(320px, 1fr)); gap: 16px 48px; padding: 26px 0; border-bottom: 1px solid #eae6de"><div style="font-size: 18px; letter-spacing: -0.01em; font-weight: 500; max-width: 26ch">Is anything expensive happening on every message?</div><p style="font-size: 15.5px; line-height: 1.6; color: #4a4741; margin: 0; text-wrap: pretty">No network calls on the render path — that is architectural, not incidental. Every tile declares a cost tier, the daemon does the sampling, and the renderer reads a cache.</p></div>
+      <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(320px, 1fr)); gap: 16px 48px; padding: 26px 0; border-bottom: 1px solid #eae6de"><div style="font-size: 18px; letter-spacing: -0.01em; font-weight: 500; max-width: 26ch">A config arrives as a pasted blob. Is that safe?</div><p style="font-size: 15.5px; line-height: 1.6; color: #4a4741; margin: 0; text-wrap: pretty">Commands are argv arrays, never shell strings, and any command a config wants to run has to be approved against its exact arguments first. Editing the command revokes the approval.</p></div>
+      <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(320px, 1fr)); gap: 16px 48px; padding: 26px 0; border-bottom: 1px solid #eae6de"><div style="font-size: 18px; letter-spacing: -0.01em; font-weight: 500; max-width: 26ch">My terminal has no truecolor.</div><p style="font-size: 15.5px; line-height: 1.6; color: #4a4741; margin: 0; text-wrap: pretty">Set the colour depth to ansi256 or ansi16 and the engine quantises to it. The 16 colour theme exists for exactly this.</p></div>
+      <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(320px, 1fr)); gap: 16px 48px; padding: 26px 0; border-bottom: 1px solid #eae6de"><div style="font-size: 18px; letter-spacing: -0.01em; font-weight: 500; max-width: 26ch">Can I add my own tiles?</div><p style="font-size: 15.5px; line-height: 1.6; color: #4a4741; margin: 0; text-wrap: pretty">Yes — as declarative JSON manifests with no code execution. statusline search and statusline add pull them from the registry, http-only, shown to you before install.</p></div>
+    </div>
+  </section>
+
+  <footer style="margin-top: 112px; border-top: 1px solid #e6e2da; background: #f5f2ec">
+    <div style="max-width: 1180px; margin: 0 auto; padding: 48px 32px; display: flex; gap: 48px; align-items: baseline; flex-wrap: wrap">
+      <div style="font-family: 'JetBrains Mono', monospace; font-size: 14px; font-weight: 700; letter-spacing: 0.14em">STATUSLINE</div>
+      <div style="font-size: 14px; color: #8d8880">Design it once. It looks the same in all three places.</div>
+      <div style="margin-left: auto; display: flex; gap: 24px; font-size: 14px; color: #56534d">
+        <a href="/docs" style="color: #56534d">Docs</a>
+        <a href="https://github.com/Bravim-Ketan-Purohit/statusline" style="color: #56534d">GitHub</a>
+        <a href="#top" style="color: #56534d">Back to top</a>
+      </div>
+    </div>
+  </footer>
+</div>
+
+<script>
+(function () {
+  "use strict";
+  var REPO = "Bravim-Ketan-Purohit/statusline";
+
+  /* ---- the overflow demo. Same ranking the CLI applies. ---- */
+  var TILES = [
+    { id:'branch', glyph:'⎇', label:'branch', value:'master',               compact:'master',       prio:1, bg:'#12331c', vink:'#e8fbe8' },
+    { id:'dir',    glyph:'▸', label:'dir',    value:'Developer/statusline', compact:'…/statusline', prio:3, bg:'#0f2c42', vink:'#dff2fb' },
+    { id:'model',  glyph:'✦', label:'model',  value:'Opus 5',               compact:'Opus 5',       prio:2, bg:'#2b0d3d', vink:'#f2d9ff' },
+    { id:'time',   glyph:'◷', label:'time',   value:'5:46 PM CDT',          compact:'5:46 PM',      prio:4, bg:'#10283a', vink:'#e6f4fb' },
+    { id:'ctx',    glyph:'▮', label:'ctx',    value:'23% 226k/1M',          compact:'23%',          prio:3, bg:'#101d3d', vink:'#dfe4fb' },
+    { id:'cpu',    glyph:'▮', label:'cpu',    value:'19%',                  compact:'19%',          prio:6, bg:'#0d1633', vink:'#dfe4fb' },
+    { id:'mem',    glyph:'▤', label:'mem',    value:'13G/18G',              compact:'13G',          prio:6, bg:'#330d2a', vink:'#ff9ecf' },
+    { id:'load',   glyph:'≈', label:'load',   value:'3.83',                 compact:'3.83',         prio:7, bg:'#26282c', vink:'#e6e2da' },
+    { id:'disk',   glyph:'⌸', label:'disk',   value:'85%',                  compact:'85%',          prio:7, bg:'#26282c', vink:'#e8a33c' },
+    { id:'batt',   glyph:'▰', label:'batt',   value:'92%+',                 compact:'92%',          prio:5, bg:'#12331c', vink:'#b8f0c4' },
+    { id:'net',    glyph:'⇅', label:'net',    value:'↓7.4K ↑54K',           compact:'↓7.4K',        prio:8, bg:'#0d2f2f', vink:'#c8fbf5' }
+  ];
+  var GAP = 1;
+  function render1(t, compact) {
+    var label = compact ? '' : t.label;
+    var value = compact ? t.compact : t.value;
+    var text = t.glyph + ' ' + (label ? label + ' ' : '') + value;
+    var o = {}; for (var k in t) o[k] = t[k];
+    o.compact = compact; o.text = ' ' + text + ' '; o.cells = text.length + 2;
+    return o;
+  }
+  function total(list) {
+    var n = 0; for (var i = 0; i < list.length; i++) n += list[i].cells + GAP;
+    return list.length ? n - GAP : 0;
+  }
+  function solve(cols) {
+    var barCompact = cols < 80;
+    var order = TILES.slice().sort(function (a, b) {
+      return (b.prio - a.prio) || (TILES.indexOf(b) - TILES.indexOf(a));
+    });
+    var kept = TILES.map(function (t) { return render1(t, barCompact); });
+    if (!barCompact) {
+      for (var j = 0; j < order.length; j++) {
+        if (total(kept) <= cols) break;
+        (function (t) {
+          kept = kept.map(function (e) { return e.id === t.id ? render1(t, true) : e; });
+        })(order[j]);
+      }
+    }
+    var i = 0;
+    while (kept.length > 1 && total(kept) > cols && i < order.length) {
+      var drop = order[i++];
+      kept = kept.filter(function (e) { return e.id !== drop.id; });
+    }
+    var shortened = kept.filter(function (e) { return e.compact; }).length;
+    return { kept: kept, barCompact: barCompact, shortened: shortened,
+             used: total(kept), dropped: TILES.length - kept.length };
+  }
+  function layerFor(c) {
+    return c >= 220 ? '2xl' : c >= 160 ? 'xl' : c >= 120 ? 'lg' : c >= 80 ? 'md' : c >= 40 ? 'sm' : 'xs';
+  }
+
+  var stage = document.getElementById('stage');
+  var bar   = document.getElementById('bar');
+  var input = document.getElementById('cols');
+  var stageW = 1080;
+
+  function measure() {
+    if (!stage) return;
+    var cs = getComputedStyle(stage);
+    var w = Math.floor(stage.clientWidth - parseFloat(cs.paddingLeft) - parseFloat(cs.paddingRight));
+    if (w > 120 && w !== stageW) { stageW = w; draw(); }
+  }
+  function draw() {
+    var cols = Number(input.value);
+    var r = solve(cols);
+    var pxPerCol = Math.min(11, stageW / cols);
+    var font = pxPerCol / 0.6;
+
+    bar.setAttribute('style',
+      'width:' + Math.round(cols * pxPerCol) + 'px;display:flex;gap:' + pxPerCol + 'px;' +
+      "font-family:'JetBrains Mono',monospace;font-size:" + font.toFixed(2) + 'px;' +
+      'line-height:2.05;flex-shrink:0;max-width:100%;overflow:hidden');
+
+    var html = '';
+    for (var i = 0; i < r.kept.length; i++) {
+      var t = r.kept[i];
+      html += '<span style="background:' + t.bg + ';color:' + t.vink +
+              ';white-space:pre;border-radius:1px">' +
+              t.text.replace(/&/g,'&amp;').replace(/</g,'&lt;') + '</span>';
+    }
+    bar.innerHTML = html;
+
+    document.getElementById('colsLabel').textContent = cols + ' COL · ' + Math.round(cols * pxPerCol) + ' PX';
+    document.getElementById('layerName').textContent = layerFor(cols);
+    document.getElementById('drawnCount').textContent = r.kept.length;
+    var dc = document.getElementById('droppedCount');
+    dc.textContent = r.dropped ? r.dropped : '—';
+    dc.style.color = r.dropped ? '#c0492f' : '#16181c';
+    document.getElementById('usedCols').textContent = r.used;
+    document.getElementById('compactLabel').textContent =
+      r.barCompact ? 'COMPACT — LABELS DROPPED' : (r.shortened ? r.shortened + ' SHORTENED' : '');
+  }
+  if (input && bar) {
+    input.addEventListener('input', draw);
+    window.addEventListener('resize', measure);
+    if (typeof ResizeObserver !== 'undefined') new ResizeObserver(measure).observe(stage);
+    measure(); draw();
+  }
+
+  /* ---- copy the install command ---- */
+  var btn = document.getElementById('copyBtn');
+  if (btn) btn.addEventListener('click', function () {
+    var cmd = document.getElementById('installCmd').textContent;
+    try { navigator.clipboard.writeText(cmd); } catch (e) {}
+    btn.textContent = 'COPIED';
+    setTimeout(function () { btn.textContent = 'COPY'; }, 1600);
+  });
+
+  /* ---- star count ---- */
+  fetch('https://api.github.com/repos/' + REPO)
+    .then(function (r) { return r.ok ? r.json() : null; })
+    .then(function (d) {
+      var n = d && d.stargazers_count;
+      if (typeof n !== 'number') return;
+      var s = n >= 1000 ? (n / 1000).toFixed(1).replace(/\.0$/, '') + 'k' : String(n);
+      var els = document.querySelectorAll('[data-stars]');
+      for (var i = 0; i < els.length; i++) els[i].textContent = s;
+    })
+    .catch(function () {});
+
+  /* ---- video: muted autoplay loops, except the long take which gets controls ---- */
+  var vids = document.querySelectorAll('video');
+  for (var i = 0; i < vids.length; i++) {
+    (function (v) {
+      v.muted = true; v.playsInline = true; v.loop = true;
+      if (v.dataset.manual === '1') { v.controls = true; return; }
+      v.autoplay = true; v.preload = 'metadata';
+      if (v.dataset.rate) v.playbackRate = Number(v.dataset.rate);
+      var p = v.play();
+      if (p && p.catch) p.catch(function () {});
+    })(vids[i]);
+  }
+})();
+</script>
+</body>
+</html>

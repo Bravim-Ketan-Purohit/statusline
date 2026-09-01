@@ -1,0 +1,26 @@
+name: New tile
+description: Propose a tile for the catalogue
+labels: [tile]
+body:
+  - type: input
+    id: name
+    attributes: { label: What should it show }
+    validations: { required: true }
+  - type: dropdown
+    id: tier
+    attributes:
+      label: What does it cost to compute
+      description: Nothing expensive may run on the render path.
+      options:
+        - T0 — free, already on stdin
+        - T1 — a local file read
+        - T2 — a subprocess, cached
+        - T3 — sampled by the daemon
+        - T4 — network, needs a credential
+    validations: { required: true }
+  - type: textarea
+    id: source
+    attributes:
+      label: Where does the data come from
+      placeholder: "e.g. `gh pr status --json`, /proc/stat, an env var"
+    validations: { required: true }

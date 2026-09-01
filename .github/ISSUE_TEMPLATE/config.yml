@@ -1,0 +1,5 @@
+blank_issues_enabled: true
+contact_links:
+  - name: Documentation
+    url: https://github.com/Bravim-Ketan-Purohit/statusline#readme
+    about: Install, tiles, fills, rules and the CLI reference.

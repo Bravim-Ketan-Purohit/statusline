@@ -1,0 +1,30 @@
+name: Bug report
+description: Something renders wrong, crashes, or behaves unexpectedly
+labels: [bug]
+body:
+  - type: textarea
+    id: what
+    attributes:
+      label: What happened
+      description: What you saw, and what you expected instead.
+    validations: { required: true }
+  - type: textarea
+    id: repro
+    attributes:
+      label: Steps to reproduce
+      placeholder: |
+        1. …
+        2. …
+    validations: { required: true }
+  - type: textarea
+    id: doctor
+    attributes:
+      label: Output of `statusline doctor`
+      description: This catches most misconfiguration on its own.
+      render: shell
+  - type: input
+    id: env
+    attributes:
+      label: Environment
+      placeholder: "macOS 15.2 · Claude Code 2.1.240 · tmux 3.5a · node 22"
+    validations: { required: true }
