@@ -7,7 +7,7 @@
     "test": "pnpm -r test && pnpm bench",
     "bench": "node packages/cli/dist/bench.js",
     "verify": "pnpm build && pnpm test",
-    "build:site": "node scripts/build-site.mjs",
+    "build:site": "pnpm build && node scripts/build-site.mjs",
     "preview:site": "node scripts/build-site.mjs && npx --yes serve dist-site -l 5000",
     "media:publish": "bash scripts/publish-media.sh",
     "media:check": "node scripts/check-media.mjs"

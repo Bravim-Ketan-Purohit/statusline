@@ -37,11 +37,17 @@ fs.mkdirSync(OUT, { recursive: true });
 
 /* 1 — the builder, mounted at /app/ */
 log("building the visual builder …");
-execFileSync(
-  path.join(ROOT, "packages/web/node_modules/.bin/vite"),
-  ["build", "--base=/app/", "--outDir", path.join(OUT, "app"), "--emptyOutDir"],
-  { cwd: path.join(ROOT, "packages/web"), stdio: ["ignore", "pipe", "inherit"] }
-);
+try {
+  execFileSync(
+    path.join(ROOT, "packages/web/node_modules/.bin/vite"),
+    ["build", "--base=/app/", "--outDir", path.join(OUT, "app"), "--emptyOutDir"],
+    { cwd: path.join(ROOT, "packages/web"), stdio: ["ignore", "inherit", "inherit"] }
+  );
+} catch (e) {
+  console.error("\n  vite build failed. The usual cause is that packages/core has not");
+  console.error("  been compiled yet — run `pnpm build` first, or use `pnpm build:site`.");
+  process.exit(1);
+}
 log(`app  -> dist-site/app (${fs.readdirSync(path.join(OUT, "app", "assets")).length} assets)`);
 
 /* 2 — the static pages. {{MEDIA}} is rewritten to wherever the demo video
