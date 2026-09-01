@@ -18,7 +18,19 @@ jobs:
       - run: pnpm build
       # Unit tests, then the perf gate. bench.ts exits non-zero on regression,
       # which is what makes "fail the build if it regresses" real.
+      #
+      # The budget is higher here than the 75ms a laptop is held to, and the
+      # reason is measured rather than assumed. On this runner Node's startup
+      # floor is 23.7ms -- within a millisecond of a laptop's 24.5ms -- so the
+      # difference is not process overhead. Executing the bundle is what costs
+      # roughly twice as much on a shared vCPU: 36ms locally, 76ms here, on
+      # identical code. 120ms leaves headroom over that and over runner noise
+      # while still failing on the kind of regression this gate exists for --
+      # a subprocess or a sync read landing on the render path, which costs
+      # tens of milliseconds, not single digits.
       - run: pnpm test
+        env:
+          STATUSLINE_RENDER_BUDGET: 120
       # tiles/ commands smoke: the bundle must actually execute
       - run: echo '{}' | COLUMNS=120 node packages/cli/dist/statusline.js render
       - run: node packages/cli/dist/statusline.js tiles
