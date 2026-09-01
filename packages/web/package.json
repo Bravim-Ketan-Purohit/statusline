@@ -6,7 +6,8 @@
   "scripts": {
     "dev": "vite",
     "build": "tsc -p tsconfig.json --noEmit && vite build",
-    "preview": "vite preview --port 4321"
+    "preview": "vite preview --port 4321",
+    "build:site": "node build-site-guard.mjs"
   },
   "dependencies": {
     "@statusline/core": "workspace:*",
