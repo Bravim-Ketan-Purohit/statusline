@@ -16,7 +16,7 @@
 <p align="center">
   <img src="https://img.shields.io/badge/license-MIT-blue.svg" alt="MIT">
   <img src="https://img.shields.io/badge/tiles-68-8a5cf6" alt="68 tiles">
-  <img src="https://img.shields.io/badge/render-%3C100ms%20enforced-3f7f58" alt="render under 100 ms, enforced in CI">
+  <img src="https://img.shields.io/badge/render%20cost-%3C75ms%20enforced-3f7f58" alt="render cost under 75 ms, enforced in CI">
   <img src="https://img.shields.io/badge/network%20on%20render%20path-0-b0402f" alt="0 network calls">
 </p>
 
@@ -214,9 +214,10 @@ what makes "the preview cannot drift" true rather than aspirational.
 pnpm verify        # build + 135 tests + the perf gate
 ```
 
-The perf gate fails the build if a warm render exceeds 100 ms. A quiet machine
-lands around 50 ms with all 68 tiles resolved; `pnpm bench` prints the median,
-p95 and max for yours. See [CONTRIBUTING.md](CONTRIBUTING.md).
+`pnpm bench` calibrates Node's startup cost on your machine, subtracts it, and
+gates on what's left — the renderer's own cost, which is portable across
+hardware. The build fails above 75 ms. A laptop lands around 40 ms with all 68
+tiles resolved. See [CONTRIBUTING.md](CONTRIBUTING.md).
 
 ## Known limits
 

@@ -84,4 +84,4 @@ Every change should keep these green:
 
 - empty `{}`, malformed input and null-heavy input all exit 0 with no stderr
 - 40 columns and 240 columns both render without wrapping
-- the warm render stays under 100ms
+- the render cost (total minus this machine's node startup floor) stays under 75ms
