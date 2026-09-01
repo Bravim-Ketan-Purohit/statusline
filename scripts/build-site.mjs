@@ -58,7 +58,9 @@ let pages = 0;
 for (const f of fs.readdirSync(path.join(ROOT, "www"))) {
   const src = path.join(ROOT, "www", f);
   if (f.endsWith(".html")) {
-    const html = fs.readFileSync(src, "utf8").replaceAll("{{MEDIA}}", cfg.mediaBase);
+    const html = fs.readFileSync(src, "utf8")
+      .replaceAll("{{MEDIA}}", cfg.mediaBase)
+      .replaceAll("{{SITE}}", cfg.siteUrl);
     fs.writeFileSync(path.join(OUT, f), html);
     pages++;
   } else if (/\.(svg|txt|xml|ico|png|webmanifest)$/.test(f)) {
@@ -75,7 +77,7 @@ fs.writeFileSync(
   docsPage(
     fs.readFileSync(path.join(ROOT, "docs/GUIDE.md"), "utf8"),
     fs.readFileSync(path.join(ROOT, "docs/REFERENCE.md"), "utf8")
-  )
+  ).replaceAll("{{SITE}}", cfg.siteUrl)
 );
 pages++;
 

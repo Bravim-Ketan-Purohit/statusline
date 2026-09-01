@@ -107,6 +107,15 @@ export function docsPage(guide, reference) {
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <title>Documentation — Statusline</title>
 <meta name="description" content="Install, concepts, recipes and the full reference for Statusline — the visual builder for Claude Code and tmux status lines.">
+<link rel="canonical" href="{{SITE}}/docs">
+<meta property="og:type" content="article">
+<meta property="og:site_name" content="Statusline">
+<meta property="og:url" content="{{SITE}}/docs">
+<meta property="og:title" content="Documentation — Statusline">
+<meta property="og:description" content="Install, the four concepts, recipes and the full reference.">
+<meta property="og:image" content="{{SITE}}/og.png">
+<meta name="twitter:card" content="summary_large_image">
+<meta name="twitter:image" content="{{SITE}}/og.png">
 <link rel="icon" href="/favicon.svg" type="image/svg+xml">
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
