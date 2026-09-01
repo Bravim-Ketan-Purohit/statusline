@@ -1,5 +1,10 @@
 name: ci
-on: [push, pull_request]
+on:
+  # Branches only. Pushing the media-v1 asset tag should not spend a CI run.
+  push:
+    branches: [main]
+  pull_request:
+    branches: [main]
 jobs:
   verify:
     runs-on: ubuntu-latest
